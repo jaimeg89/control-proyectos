@@ -178,6 +178,23 @@
   .toast.show{transform:translateY(0);opacity:1}
   .toast.success{border-left:3px solid var(--complet-c)}
   .toast.error{border-left:3px solid var(--vencida)}
+
+  /* ── LOGIN ── */
+  .login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;padding:24px}
+  .login-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:36px 32px;width:100%;max-width:360px}
+  .login-logo{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:22px;color:var(--text);text-align:center;margin-bottom:4px;letter-spacing:.05em}
+  .login-logo span{color:#3b82f6}
+  .login-sub{text-align:center;font-size:13px;color:var(--muted);margin-bottom:28px}
+  .login-field{margin-bottom:16px}
+  .login-label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:6px}
+  .login-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border-color .15s}
+  .login-input:focus{border-color:#3b82f6}
+  .login-btn{width:100%;padding:11px;background:#3b82f6;border:none;border-radius:var(--radius-sm);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background .15s;margin-top:4px}
+  .login-btn:hover{background:#2563eb}
+  .login-error{color:var(--vencida);font-size:12px;text-align:center;margin-top:10px;min-height:18px}
+  .login-input.shake{animation:shake .3s}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
   @media(max-width:768px){
     .kpi-grid{grid-template-columns:1fr 1fr}
     .dash-grid{grid-template-columns:1fr}
@@ -218,6 +235,25 @@
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">CP<span>.</span>ARQ</div>
+    <div class="login-sub">Control de Proyectos — Acceso privado</div>
+    <div class="login-field">
+      <label class="login-label">Usuario</label>
+      <input class="login-input" type="text" id="login-user" placeholder="tu usuario" autocomplete="username" autocapitalize="none">
+    </div>
+    <div class="login-field">
+      <label class="login-label">Contraseña</label>
+      <input class="login-input" type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Ingresar</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+
 <div class="topbar">
   <div class="topbar-left">
     <div class="logo">CP<span>.</span>ARQ</div>
@@ -226,6 +262,7 @@
       <button class="user-btn active-todos" onclick="setUser('todos')">Todos</button>
     </div>
   </div>
+  <div id="topbar-user-info" style="display:flex;align-items:center;gap:8px"></div>
   <div class="topbar-right">
     <span class="sync-dot" id="sync-dot"></span>
     <span class="sync-label" id="sync-label">Conectando…</span>
@@ -238,7 +275,7 @@
   <button class="nav-tab active" onclick="showTab('dashboard')">Dashboard</button>
   <button class="nav-tab" onclick="showTab('tareas')">Tareas</button>
   <button class="nav-tab" onclick="showTab('proyectos')">Proyectos</button>
-  <button class="nav-tab" onclick="showTab('personas')">Personas</button>
+  <button class="nav-tab" id="tab-personas" onclick="showTab('personas')">Personas</button>
 </div>
 
 <div class="main">
@@ -286,7 +323,7 @@
   <div class="section" id="sec-proyectos">
     <div class="section-header">
       <span class="section-title">Proyectos</span>
-      <button class="btn btn-primary" onclick="openNewProject()">＋ Nuevo proyecto</button>
+      <button class="btn btn-primary proj-admin-only" onclick="openNewProject()">＋ Nuevo proyecto</button>
     </div>
     <div class="proj-grid" id="proj-grid"></div>
   </div>
@@ -559,7 +596,7 @@ function renderProyectos(){
       </div>
       ${ptasks.length?`<div class="task-mini-list">${ptasks.map(t=>{const dc={'En curso':'var(--encurso-c)','Pendiente':'var(--pendiente-c)','Bloqueada':'var(--bloq-c)'}[t.estado]||'var(--dim)';return`<div class="task-mini"><div class="task-mini-dot" style="background:${dc}"></div>${t.descripcion}</div>`}).join('')}</div>`:''}
       <div class="proj-card-actions">
-        <button class="btn btn-sm" onclick="event.stopPropagation();openEditProject(${p.id})">✏️ Editar</button>
+        ${isAdmin()?`<button class="btn btn-sm" onclick="event.stopPropagation();openEditProject(${p.id})">✏️ Editar</button>`:""}
       </div>
     </div>`;
   }).join('');
@@ -603,7 +640,25 @@ function renderPersonas(){
 }
 
 // ── Modal Tarea ───────────────────────────────────────────────
-function populateProjectSelect(){document.getElementById('f-proyecto').innerHTML=projects.map(p=>`<option value="${p.nombre}">${p.nombre}</option>`).join('')}
+function populateProjectSelect(){
+  const sel=document.getElementById('f-proyecto');
+  sel.innerHTML=projects.map(p=>`<option value="${p.nombre}">${p.nombre}</option>`).join('');
+  sel.onchange=function(){autoAssignPersona(this.value)};
+}
+function autoAssignPersona(projNombre){
+  const proj=projects.find(p=>p.nombre===projNombre);
+  const fPer=document.getElementById('f-persona');
+  if(proj&&proj.persona){
+    fPer.value=proj.persona;
+    fPer.disabled=true;
+    fPer.style.opacity='0.6';
+    fPer.title='Asignado automáticamente según el proyecto';
+  } else {
+    fPer.disabled=false;
+    fPer.style.opacity='1';
+    fPer.title='';
+  }
+}
 function populatePersonaSelect(selId){document.getElementById(selId).innerHTML=personas.map(p=>`<option value="${p.nombre}">${p.nombre}</option>`).join('')}
 
 function openNewTask(){
@@ -611,10 +666,16 @@ function openNewTask(){
   document.getElementById('modal-task-title').textContent='Nueva tarea';
   document.getElementById('btn-delete-task').style.display='none';
   populateProjectSelect();populatePersonaSelect('f-persona');
+  // Reset persona lock
+  const fPer=document.getElementById('f-persona');fPer.disabled=false;fPer.style.opacity='1';
   if(activeUser!=='todos'){
     const up=projects.filter(p=>p.persona===activeUser);
-    if(up.length)document.getElementById('f-proyecto').value=up[0].nombre;
-    document.getElementById('f-persona').value=activeUser;
+    if(up.length){document.getElementById('f-proyecto').value=up[0].nombre;autoAssignPersona(up[0].nombre);}
+    else{document.getElementById('f-persona').value=activeUser;}
+  } else {
+    // Auto-assign from first project
+    const firstProj=document.getElementById('f-proyecto').value;
+    if(firstProj)autoAssignPersona(firstProj);
   }
   ['f-desc','f-notas','f-fecha','f-categoria'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-prioridad').value='Media';
@@ -633,7 +694,10 @@ function openEdit(taskId){
   document.getElementById('f-prioridad').value=t.prioridad||'Media';
   document.getElementById('f-estado').value=t.estado||'Pendiente';
   document.getElementById('f-fecha').value=t.fecha||'';
-  document.getElementById('f-persona').value=t.persona||'';
+  // Auto-assign and lock persona based on project
+  autoAssignPersona(t.proyecto);
+  // Override with saved persona in case project assignment changed
+  if(t.persona)document.getElementById('f-persona').value=t.persona;
   document.getElementById('f-notas').value=t.notas||'';
   document.getElementById('overlay-detail').classList.remove('open');
   document.getElementById('overlay-task').classList.add('open');
@@ -783,7 +847,13 @@ function showTab(tab){
   renderAll();
 }
 function setUser(user){
-  activeUser=user;renderUserSwitcher();renderAll();
+  activeUser=user;renderUserSwitcher();
+  // Hide personas tab when not viewing all
+  const tabP=document.getElementById('tab-personas');
+  if(tabP) tabP.style.display=user==='todos'?'':'none';
+  // If we're on personas tab and switch to individual, go to dashboard
+  if(user!=='todos'&&activeTab==='personas'){showTab('dashboard');return;}
+  renderAll();
 }
 function closeModal(id){document.getElementById(id).classList.remove('open')}
 function showToast(msg,type='success'){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type} show`;setTimeout(()=>t.classList.remove('show'),3000)}
@@ -792,6 +862,7 @@ function renderAll(){
   if(activeTab==='tareas')renderTareas();
   if(activeTab==='proyectos')renderProyectos();
   if(activeTab==='personas')renderPersonas();
+  if(currentUser)applyUserPermissions();
 }
 function populateProjectFilter(){
   const sel=document.getElementById('fil-proyecto'),cur=sel.value;
@@ -801,7 +872,94 @@ function populateProjectFilter(){
 document.querySelectorAll('.overlay').forEach(ov=>{ov.addEventListener('click',e=>{if(e.target===ov)ov.classList.remove('open')})});
 
 // ── Init ──────────────────────────────────────────────────────
-loadAll();subscribeRealtime();
+
+// ── AUTH ─────────────────────────────────────────────────────
+const USERS = {
+  'jaime': {hash:'79ea1dce151be5b12983483a7df57162a34a49bfa75374c6908b8cdaeb518c8a', nombre:'Jaime',  rol:'admin',   color:'#3b82f6'},
+  'jose':  {hash:'a31984c2d728b43b2ceac66f690e4158e4226adb707d459ad3bc66f5b84babed', nombre:'José',   rol:'miembro', color:'#f59e0b'},
+  'gladys':{hash:'88958f73f5f7ff4a3bf4cbf434abe774b6550c97f4a0f70453ac1d361dfb1d49', nombre:'Gladys', rol:'miembro', color:'#10b981'},
+  'admin': {hash:'69c5c0f4f991916c6c2c0178c40738ba756bba5c10b6d7dd1cbe10f8f6c84ed9', nombre:'Admin',  rol:'admin',   color:'#8b5cf6'},
+};
+
+let currentUser = null;
+
+async function sha256(msg) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function doLogin() {
+  const u = document.getElementById('login-user').value.trim().toLowerCase();
+  const p = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+  err.textContent = '';
+  if (!USERS[u]) { showLoginError('Usuario o contraseña incorrectos'); return; }
+  const h = await sha256(p);
+  if (h !== USERS[u].hash) { showLoginError('Usuario o contraseña incorrectos'); return; }
+  currentUser = { key: u, ...USERS[u] };
+  sessionStorage.setItem('cp_user', JSON.stringify(currentUser));
+  document.getElementById('login-screen').style.display = 'none';
+  onLoginSuccess();
+}
+
+function showLoginError(msg) {
+  document.getElementById('login-error').textContent = msg;
+  ['login-user','login-pass'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('shake');
+    void el.offsetWidth;
+    el.classList.add('shake');
+  });
+}
+
+function checkSession() {
+  const saved = sessionStorage.getItem('cp_user');
+  if (saved) {
+    try {
+      currentUser = JSON.parse(saved);
+      document.getElementById('login-screen').style.display = 'none';
+      onLoginSuccess();
+      return true;
+    } catch(e) {}
+  }
+  return false;
+}
+
+function onLoginSuccess() {
+  applyUserPermissions();
+  loadAll();
+  subscribeRealtime();
+}
+
+function applyUserPermissions() {
+  if (!currentUser) return;
+  const isAdmin = currentUser.rol === 'admin';
+  // Show/hide project management buttons based on role
+  document.querySelectorAll('.proj-admin-only').forEach(el => {
+    el.style.display = isAdmin ? '' : 'none';
+  });
+  // Show logged-in user info in topbar
+  const userInfo = document.getElementById('topbar-user-info');
+  if (userInfo) {
+    userInfo.innerHTML = `<span style="font-size:12px;color:var(--muted)">Hola, <strong style="color:${currentUser.color}">${currentUser.nombre}</strong></span>
+    <button class="btn" style="padding:4px 10px;font-size:11px" onclick="logout()">Salir</button>`;
+  }
+  // Auto-set active user filter to current user (except admin)
+  if (currentUser.nombre !== 'Admin' && currentUser.nombre !== 'Jaime') {
+    // Non-admin non-jefe: default to their own view
+    // But still allow switching - just pre-select their view
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem('cp_user');
+  currentUser = null;
+  location.reload();
+}
+
+function isAdmin() { return currentUser && currentUser.rol === 'admin'; }
+
+if(!checkSession()){/* wait for login */}
 </script>
 </body>
 </html>
