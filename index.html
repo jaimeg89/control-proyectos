@@ -179,6 +179,27 @@
   .toast.success{border-left:3px solid var(--complet-c)}
   .toast.error{border-left:3px solid var(--vencida)}
 
+
+  /* ── INLINE QUICK-EDIT DROPDOWN ── */
+  .qe-wrap{position:relative;display:inline-block}
+  .qe-wrap .badge{cursor:pointer;user-select:none}
+  .qe-wrap .badge:hover{opacity:.85;outline:1px solid var(--border2)}
+  .qe-menu{
+    display:none;position:fixed;
+    background:var(--surface);border:1px solid var(--border2);
+    border-radius:var(--radius-sm);padding:4px;
+    z-index:150;min-width:130px;
+    box-shadow:0 8px 24px rgba(0,0,0,.5);
+  }
+  .qe-menu.open{display:block}
+  .qe-item{
+    padding:7px 12px;border-radius:4px;font-size:12px;font-weight:600;
+    cursor:pointer;display:flex;align-items:center;gap:8px;
+    transition:background .1s;white-space:nowrap;
+  }
+  .qe-item:hover{background:var(--surface2)}
+  .qe-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
   /* ── LOGIN ── */
   .login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;padding:24px}
   .login-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:36px 32px;width:100%;max-width:360px}
@@ -306,7 +327,6 @@
     </div>
     <div class="table-wrap"><table>
       <thead><tr>
-        <th onclick="sortBy('id')">ID <span class="sort-icon" id="sort-id"></span></th>
         <th onclick="sortBy('proyecto')">Proyecto <span class="sort-icon" id="sort-proyecto"></span></th>
         <th>Descripción</th>
         <th onclick="sortBy('persona')">Persona <span class="sort-icon" id="sort-persona"></span></th>
@@ -347,7 +367,6 @@
     </div>
     <div class="table-wrap"><table>
       <thead><tr>
-        <th>ID</th>
         <th>Proyecto</th>
         <th>Descripción</th>
         <th>Persona</th>
@@ -448,6 +467,11 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- QUICK EDIT DROPDOWN -->
+<div class="qe-menu" id="qe-menu">
+  <div id="qe-items"></div>
+</div>
 
 <script>
 const SUPABASE_URL='https://zoadqzcsucthllmujkxs.supabase.co';
@@ -600,7 +624,7 @@ function renderTareas(){
   if(!list.length){tbody.innerHTML=`<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">🔍</div>No hay tareas que coincidan</div></td></tr>`;return}
   tbody.innerHTML=list.map(t=>{
     const d=diasRestantes(t.fecha),al=alerta(t),rowCls=t.estado==='Completada'?'row-completada':(d!==null&&d<0?'row-vencida':''),diasStr=d===null?'—':d===0?'Hoy':d<0?`${d}d`:`+${d}d`,diasCls=d===null?'':d<0?'neg':d<=7?'warn':'',estCls=t.estado.toLowerCase().replace(' ','-').replace('ó','o'),prioCls=(t.prioridad||'').toLowerCase();
-    return`<tr class="${rowCls}" onclick="openDetail('${t.id}')"><td><span class="cod-tag">${t.id}</span></td><td><div class="proj-tag">${t.proyecto}</div><div class="cod-tag">${t.categoria}</div></td><td><div class="task-desc"><div class="task-desc-main">${t.descripcion}</div>${t.notas?`<div class="task-desc-sub">${t.notas}</div>`:''}</div></td><td>${personaChip(t.persona)}</td><td><span class="badge ${prioCls}">${t.prioridad}</span></td><td><span class="badge ${estCls}">${t.estado}</span></td><td><span class="fecha-cell">${fmtFecha(t.fecha)}</span></td><td><span class="dias-cell ${diasCls}">${diasStr}</span></td><td>${al.txt}</td><td><span class="fecha-cell" style="font-size:11px;color:var(--dim)">${t.created_at?fmtFechaCorta(t.created_at):'—'}</span></td></tr>`;
+    return`<tr class="${rowCls}" onclick="openDetail('${t.id}')"><td><div class="proj-tag">${t.proyecto}</div><div class="cod-tag">${t.categoria}</div></td><td><div class="task-desc"><div class="task-desc-main">${t.descripcion}</div>${t.notas?`<div class="task-desc-sub">${t.notas}</div>`:''}</div></td><td>${personaChip(t.persona)}</td><td onclick="event.stopPropagation();openQE(event,'prioridad','${t.id}')"><span class="badge ${prioCls}" title="Click para cambiar">${t.prioridad} ▾</span></td><td onclick="event.stopPropagation();openQE(event,'estado','${t.id}')"><span class="badge ${estCls}" title="Click para cambiar">${t.estado} ▾</span></td><td><span class="fecha-cell">${fmtFecha(t.fecha)}</span></td><td><span class="dias-cell ${diasCls}">${diasStr}</span></td><td>${al.txt}</td><td><span class="fecha-cell" style="font-size:11px;color:var(--dim)">${t.created_at?fmtFechaCorta(t.created_at):'—'}</span></td></tr>`;
   }).join('');
 }
 function sortBy(col){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1}renderTareas()}
@@ -900,15 +924,14 @@ function closeModal(id){document.getElementById(id).classList.remove('open')}
 function showToast(msg,type='success'){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type} show`;setTimeout(()=>t.classList.remove('show'),3000)}
 async function renderEliminadas(){
   const tbody=document.getElementById('tbody-eliminadas');
-  tbody.innerHTML='<tr><td colspan="8"><div class="loading-screen" style="height:80px"><div class="spinner"></div></div></td></tr>';
+  tbody.innerHTML='<tr><td colspan="7"><div class="loading-screen" style="height:80px"><div class="spinner"></div></div></td></tr>';
   try{
     const{data,error}=await sb.from('papelera').select('*').order('eliminada_at',{ascending:false});
     if(error)throw error;
-    if(!data||!data.length){tbody.innerHTML='<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🗑</div>No hay tareas eliminadas</div></td></tr>';return}
+    if(!data||!data.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🗑</div>No hay tareas eliminadas</div></td></tr>';return}
     tbody.innerHTML=data.map(t=>{
       const estCls=(t.estado||'').toLowerCase().replace(' ','-').replace('ó','o');
       return`<tr>
-        <td><span class="cod-tag">${t.id}</span></td>
         <td><div class="proj-tag">${t.proyecto||'—'}</div><div class="cod-tag">${t.categoria||''}</div></td>
         <td><div class="task-desc-main">${t.descripcion||'—'}</div>${t.notas?`<div class="task-desc-sub" style="font-size:11px;color:var(--muted)">${t.notas}</div>`:''}</td>
         <td>${personaChip(t.persona)}</td>
@@ -918,7 +941,7 @@ async function renderEliminadas(){
         <td><span style="font-size:12px;color:var(--muted)">${t.eliminada_at?fmtFechaCorta(t.eliminada_at):'—'}</span></td>
       </tr>`;
     }).join('');
-  }catch(e){tbody.innerHTML='<tr><td colspan="8"><div class="empty-state" style="color:var(--vencida)">Error al cargar historial</div></td></tr>'}
+  }catch(e){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state" style="color:var(--vencida)">Error al cargar historial</div></td></tr>'}
 }
 
 function renderAll(){
@@ -998,21 +1021,19 @@ function onLoginSuccess() {
 
 function applyUserPermissions() {
   if (!currentUser) return;
-  const isAdmin = currentUser.rol === 'admin';
-  // Show/hide project management buttons based on role
+  const adminUser = currentUser.rol === 'admin';
+  // Show/hide project management buttons
   document.querySelectorAll('.proj-admin-only').forEach(el => {
-    el.style.display = isAdmin ? '' : 'none';
+    el.style.display = adminUser ? '' : 'none';
   });
-  // Show logged-in user info in topbar
+  // Show/hide eliminadas tab
+  const tabElim = document.getElementById('tab-eliminadas');
+  if (tabElim) tabElim.style.display = adminUser ? '' : 'none';
+  // Topbar user info
   const userInfo = document.getElementById('topbar-user-info');
   if (userInfo) {
     userInfo.innerHTML = `<span style="font-size:12px;color:var(--muted)">Hola, <strong style="color:${currentUser.color}">${currentUser.nombre}</strong></span>
     <button class="btn" style="padding:4px 10px;font-size:11px" onclick="logout()">Salir</button>`;
-  }
-  // Auto-set active user filter to current user (except admin)
-  if (currentUser.nombre !== 'Admin' && currentUser.nombre !== 'Jaime') {
-    // Non-admin non-jefe: default to their own view
-    // But still allow switching - just pre-select their view
   }
 }
 
@@ -1023,6 +1044,62 @@ function logout() {
 }
 
 function isAdmin() { return currentUser && currentUser.rol === 'admin'; }
+
+
+// ── QUICK EDIT (inline prioridad/estado) ─────────────────────
+let qeTaskId = null, qeField = null;
+
+const QE_OPTIONS = {
+  prioridad: [
+    {val:'Alta',   color:'#ef4444', bg:'#3b0f0f'},
+    {val:'Media',  color:'#f59e0b', bg:'#3b2800'},
+    {val:'Baja',   color:'#9ca3af', bg:'#1f2937'},
+  ],
+  estado: [
+    {val:'Pendiente',  color:'#94a3b8', bg:'#1e293b'},
+    {val:'En curso',   color:'#3b82f6', bg:'#1e3a5f'},
+    {val:'Completada', color:'#10b981', bg:'#0a3325'},
+    {val:'Bloqueada',  color:'#f59e0b', bg:'#3b2800'},
+  ]
+};
+
+function openQE(event, field, taskId) {
+  qeTaskId = taskId; qeField = field;
+  const menu = document.getElementById('qe-menu');
+  const items = document.getElementById('qe-items');
+  const opts = QE_OPTIONS[field];
+  const cur = tasks.find(t=>t.id===taskId)?.[field];
+  items.innerHTML = opts.map(o =>
+    `<div class="qe-item${o.val===cur?' selected':''}" onclick="applyQE('${o.val}')" style="color:${o.color}">
+      <div class="qe-dot" style="background:${o.color}"></div>${o.val}${o.val===cur?' ✓':''}
+    </div>`
+  ).join('');
+  // Position near click
+  const x = Math.min(event.clientX, window.innerWidth-160);
+  const y = Math.min(event.clientY+4, window.innerHeight-200);
+  menu.style.left = x+'px';
+  menu.style.top  = y+'px';
+  menu.classList.add('open');
+  event.stopPropagation();
+}
+
+async function applyQE(value) {
+  closeQE();
+  if(!qeTaskId||!qeField) return;
+  setSyncStatus('syncing');
+  try {
+    const{error}=await sb.from('tareas').update({[qeField]:value,updated_at:new Date().toISOString()}).eq('id',qeTaskId);
+    if(error) throw error;
+    showToast(`${qeField==='prioridad'?'Prioridad':'Estado'} actualizado`,'success');
+  } catch(e) { setSyncStatus('error'); showToast('Error: '+e.message,'error'); }
+}
+
+function closeQE() {
+  document.getElementById('qe-menu').classList.remove('open');
+  qeTaskId=null; qeField=null;
+}
+
+document.addEventListener('click', () => closeQE());
 
 if(!checkSession()){/* wait for login */}
 </script>
