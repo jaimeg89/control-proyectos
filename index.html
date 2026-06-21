@@ -276,6 +276,7 @@
   <button class="nav-tab" onclick="showTab('tareas')">Tareas</button>
   <button class="nav-tab" onclick="showTab('proyectos')">Proyectos</button>
   <button class="nav-tab" id="tab-personas" onclick="showTab('personas')">Personas</button>
+  <button class="nav-tab admin-only-tab" id="tab-eliminadas" onclick="showTab('eliminadas')" style="display:none">🗑 Eliminadas</button>
 </div>
 
 <div class="main">
@@ -314,6 +315,7 @@
         <th onclick="sortBy('fecha')">Fecha límite <span class="sort-icon" id="sort-fecha"></span></th>
         <th onclick="sortBy('dias')">Días <span class="sort-icon" id="sort-dias"></span></th>
         <th>Alerta</th>
+        <th>Creada</th>
       </tr></thead>
       <tbody id="tbody"></tbody>
     </table></div>
@@ -335,6 +337,27 @@
       <button class="btn btn-primary" onclick="openNewPersona()">＋ Nueva persona</button>
     </div>
     <div class="personas-grid" id="personas-grid"></div>
+  </div>
+
+  <!-- ELIMINADAS -->
+  <div class="section" id="sec-eliminadas">
+    <div class="section-header">
+      <span class="section-title">Tareas eliminadas</span>
+      <span style="font-size:12px;color:var(--muted)">Solo visible para administradores</span>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>ID</th>
+        <th>Proyecto</th>
+        <th>Descripción</th>
+        <th>Persona</th>
+        <th>Estado</th>
+        <th>Fecha límite</th>
+        <th>Eliminada por</th>
+        <th>Fecha eliminación</th>
+      </tr></thead>
+      <tbody id="tbody-eliminadas"></tbody>
+    </table></div>
   </div>
 
 </div><!-- /main -->
@@ -389,7 +412,7 @@
       </div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Etapa</label>
-          <select id="fp-etapa"><option>Cotización</option><option>Estudios</option><option>Diseños</option><option>Construcción</option><option>Entregado</option></select>
+          <input type="text" id="fp-etapa" list="etapa-list" placeholder="Selecciona o escribe nueva…" autocomplete="off"><datalist id="etapa-list"><option value="Cotización"/><option value="Estudios"/><option value="Diseños"/><option value="Construcción"/><option value="Entregado"/></datalist>
         </div>
         <div class="form-group"><label class="form-label">Responsable</label><select id="fp-persona"></select></div>
       </div>
@@ -513,6 +536,11 @@ function alerta(t){
   return{txt:'🟢 A tiempo',cls:'atime'};
 }
 function fmtFecha(f){if(!f)return'—';const[y,m,d]=f.split('-');return`${d}/${m}/${y}`}
+function fmtFechaCorta(isoStr){
+  if(!isoStr)return'—';
+  const d=new Date(isoStr);
+  return d.toLocaleDateString('es-EC',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
 function nextTaskId(){const nums=tasks.map(t=>parseInt((t.id||'').replace('T-',''))).filter(n=>!isNaN(n));return'T-'+String((nums.length?Math.max(...nums):0)+1).padStart(3,'0')}
 function personaColor(nombre){const p=personas.find(x=>x.nombre===nombre);return p?p.color:'#64748b'}
 function personaChip(nombre){const col=personaColor(nombre);return`<span class="person-chip" style="background:${col}22;color:${col}">${nombre||'—'}</span>`}
@@ -572,7 +600,7 @@ function renderTareas(){
   if(!list.length){tbody.innerHTML=`<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">🔍</div>No hay tareas que coincidan</div></td></tr>`;return}
   tbody.innerHTML=list.map(t=>{
     const d=diasRestantes(t.fecha),al=alerta(t),rowCls=t.estado==='Completada'?'row-completada':(d!==null&&d<0?'row-vencida':''),diasStr=d===null?'—':d===0?'Hoy':d<0?`${d}d`:`+${d}d`,diasCls=d===null?'':d<0?'neg':d<=7?'warn':'',estCls=t.estado.toLowerCase().replace(' ','-').replace('ó','o'),prioCls=(t.prioridad||'').toLowerCase();
-    return`<tr class="${rowCls}" onclick="openDetail('${t.id}')"><td><span class="cod-tag">${t.id}</span></td><td><div class="proj-tag">${t.proyecto}</div><div class="cod-tag">${t.categoria}</div></td><td><div class="task-desc"><div class="task-desc-main">${t.descripcion}</div>${t.notas?`<div class="task-desc-sub">${t.notas}</div>`:''}</div></td><td>${personaChip(t.persona)}</td><td><span class="badge ${prioCls}">${t.prioridad}</span></td><td><span class="badge ${estCls}">${t.estado}</span></td><td><span class="fecha-cell">${fmtFecha(t.fecha)}</span></td><td><span class="dias-cell ${diasCls}">${diasStr}</span></td><td>${al.txt}</td></tr>`;
+    return`<tr class="${rowCls}" onclick="openDetail('${t.id}')"><td><span class="cod-tag">${t.id}</span></td><td><div class="proj-tag">${t.proyecto}</div><div class="cod-tag">${t.categoria}</div></td><td><div class="task-desc"><div class="task-desc-main">${t.descripcion}</div>${t.notas?`<div class="task-desc-sub">${t.notas}</div>`:''}</div></td><td>${personaChip(t.persona)}</td><td><span class="badge ${prioCls}">${t.prioridad}</span></td><td><span class="badge ${estCls}">${t.estado}</span></td><td><span class="fecha-cell">${fmtFecha(t.fecha)}</span></td><td><span class="dias-cell ${diasCls}">${diasStr}</span></td><td>${al.txt}</td><td><span class="fecha-cell" style="font-size:11px;color:var(--dim)">${t.created_at?fmtFechaCorta(t.created_at):'—'}</span></td></tr>`;
   }).join('');
 }
 function sortBy(col){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1}renderTareas()}
@@ -715,10 +743,23 @@ async function saveTask(){
   }catch(e){setSyncStatus('error');showToast('Error: '+e.message,'error')}
 }
 async function deleteTask(){
-  if(!editingTaskId||!confirm('¿Eliminar esta tarea?'))return;
+  if(!editingTaskId||!confirm('¿Eliminar esta tarea? Quedará en el historial de eliminadas.'))return;
   setSyncStatus('syncing');
-  try{const{error}=await sb.from('tareas').delete().eq('id',editingTaskId);if(error)throw error;showToast('Tarea eliminada','success');closeModal('overlay-task')}
-  catch(e){setSyncStatus('error');showToast('Error: '+e.message,'error')}
+  try{
+    // Save to papelera first
+    const t=tasks.find(x=>x.id===editingTaskId);
+    if(t){
+      await sb.from('papelera').insert({
+        ...t,
+        eliminada_por: currentUser?currentUser.nombre:'desconocido',
+        eliminada_at: new Date().toISOString()
+      });
+    }
+    const{error}=await sb.from('tareas').delete().eq('id',editingTaskId);
+    if(error)throw error;
+    showToast('Tarea eliminada','success');
+    closeModal('overlay-task');
+  }catch(e){setSyncStatus('error');showToast('Error: '+e.message,'error')}
 }
 
 // ── Modal Detalle ─────────────────────────────────────────────
@@ -727,7 +768,7 @@ function openDetail(taskId){
   detailTaskId=taskId;
   const d=diasRestantes(t.fecha),al=alerta(t),estCls=t.estado.toLowerCase().replace(' ','-').replace('ó','o'),prioCls=(t.prioridad||'').toLowerCase();
   document.getElementById('detail-title').innerHTML=`<span class="cod-tag">${t.id}</span> &nbsp;${t.descripcion}`;
-  document.getElementById('detail-body').innerHTML=`<div class="detail-grid"><div class="detail-item"><div class="detail-label">Proyecto</div><div class="detail-value">${t.proyecto}</div></div><div class="detail-item"><div class="detail-label">Categoría</div><div class="detail-value">${t.categoria||'—'}</div></div><div class="detail-item"><div class="detail-label">Persona</div><div class="detail-value">${personaChip(t.persona)}</div></div><div class="detail-item"><div class="detail-label">Estado</div><div class="detail-value"><span class="badge ${estCls}">${t.estado}</span></div></div><div class="detail-item"><div class="detail-label">Prioridad</div><div class="detail-value"><span class="badge ${prioCls}">${t.prioridad}</span></div></div><div class="detail-item"><div class="detail-label">Alerta</div><div class="detail-value">${al.txt}</div></div><div class="detail-item"><div class="detail-label">Fecha límite</div><div class="detail-value">${fmtFecha(t.fecha)}</div></div><div class="detail-item"><div class="detail-label">Días restantes</div><div class="detail-value" style="font-family:'JetBrains Mono',monospace">${d===null?'—':d===0?'Hoy':d<0?`${d} (vencida)`:'+'+d+' días'}</div></div></div>${t.notas?`<div class="detail-label" style="margin-bottom:6px">Notas</div><div class="detail-notes">${t.notas}</div>`:''}`;
+  document.getElementById('detail-body').innerHTML=`<div class="detail-grid"><div class="detail-item"><div class="detail-label">Proyecto</div><div class="detail-value">${t.proyecto}</div></div><div class="detail-item"><div class="detail-label">Categoría</div><div class="detail-value">${t.categoria||'—'}</div></div><div class="detail-item"><div class="detail-label">Persona</div><div class="detail-value">${personaChip(t.persona)}</div></div><div class="detail-item"><div class="detail-label">Estado</div><div class="detail-value"><span class="badge ${estCls}">${t.estado}</span></div></div><div class="detail-item"><div class="detail-label">Prioridad</div><div class="detail-value"><span class="badge ${prioCls}">${t.prioridad}</span></div></div><div class="detail-item"><div class="detail-label">Alerta</div><div class="detail-value">${al.txt}</div></div><div class="detail-item"><div class="detail-label">Fecha límite</div><div class="detail-value">${fmtFecha(t.fecha)}</div></div><div class="detail-item"><div class="detail-label">Días restantes</div><div class="detail-value" style="font-family:'JetBrains Mono',monospace">${d===null?'—':d===0?'Hoy':d<0?`${d} (vencida)`:'+'+d+' días'}</div></div><div class="detail-item"><div class="detail-label">Creada el</div><div class="detail-value">${t.created_at?fmtFechaCorta(t.created_at):'—'}</div></div></div>${t.notas?`<div class="detail-label" style="margin-bottom:6px">Notas</div><div class="detail-notes">${t.notas}</div>`:''}`;
   document.getElementById('overlay-detail').classList.add('open');
 }
 function editFromDetail(){if(detailTaskId)openEdit(detailTaskId)}
@@ -739,7 +780,7 @@ function openNewProject(){
   document.getElementById('btn-delete-project').style.display='none';
   populatePersonaSelect('fp-persona');
   ['fp-nombre','fp-codigo','fp-ubicacion','fp-cliente'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('fp-etapa').value='Cotización';
+  document.getElementById('fp-etapa').value='';
   document.getElementById('overlay-project').classList.add('open');
 }
 function openEditProject(projId){
@@ -842,7 +883,7 @@ function showTab(tab){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('sec-'+tab).classList.add('active');
-  const tabs=['dashboard','tareas','proyectos','personas'];
+  const tabs=['dashboard','tareas','proyectos','personas','eliminadas'];
   document.querySelectorAll('.nav-tab')[tabs.indexOf(tab)]?.classList.add('active');
   renderAll();
 }
@@ -857,11 +898,35 @@ function setUser(user){
 }
 function closeModal(id){document.getElementById(id).classList.remove('open')}
 function showToast(msg,type='success'){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type} show`;setTimeout(()=>t.classList.remove('show'),3000)}
+async function renderEliminadas(){
+  const tbody=document.getElementById('tbody-eliminadas');
+  tbody.innerHTML='<tr><td colspan="8"><div class="loading-screen" style="height:80px"><div class="spinner"></div></div></td></tr>';
+  try{
+    const{data,error}=await sb.from('papelera').select('*').order('eliminada_at',{ascending:false});
+    if(error)throw error;
+    if(!data||!data.length){tbody.innerHTML='<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🗑</div>No hay tareas eliminadas</div></td></tr>';return}
+    tbody.innerHTML=data.map(t=>{
+      const estCls=(t.estado||'').toLowerCase().replace(' ','-').replace('ó','o');
+      return`<tr>
+        <td><span class="cod-tag">${t.id}</span></td>
+        <td><div class="proj-tag">${t.proyecto||'—'}</div><div class="cod-tag">${t.categoria||''}</div></td>
+        <td><div class="task-desc-main">${t.descripcion||'—'}</div>${t.notas?`<div class="task-desc-sub" style="font-size:11px;color:var(--muted)">${t.notas}</div>`:''}</td>
+        <td>${personaChip(t.persona)}</td>
+        <td><span class="badge ${estCls}">${t.estado||'—'}</span></td>
+        <td><span class="fecha-cell">${fmtFecha(t.fecha)}</span></td>
+        <td><span style="font-size:12px;color:var(--muted)">${t.eliminada_por||'—'}</span></td>
+        <td><span style="font-size:12px;color:var(--muted)">${t.eliminada_at?fmtFechaCorta(t.eliminada_at):'—'}</span></td>
+      </tr>`;
+    }).join('');
+  }catch(e){tbody.innerHTML='<tr><td colspan="8"><div class="empty-state" style="color:var(--vencida)">Error al cargar historial</div></td></tr>'}
+}
+
 function renderAll(){
   if(activeTab==='dashboard')renderDashboard();
   if(activeTab==='tareas')renderTareas();
   if(activeTab==='proyectos')renderProyectos();
   if(activeTab==='personas')renderPersonas();
+  if(activeTab==='eliminadas')renderEliminadas();
   if(currentUser)applyUserPermissions();
 }
 function populateProjectFilter(){
