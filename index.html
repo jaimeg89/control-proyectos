@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Control de Proyectos</title>
+<title>controlproyectos-jaime</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
@@ -199,6 +199,32 @@
   }
   .qe-item:hover{background:var(--surface2)}
   .qe-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+
+  /* ── COMMENTS ── */
+  .comments-section{margin-top:20px;border-top:1px solid var(--border);padding-top:16px}
+  .comments-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px}
+  .comments-list{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;max-height:280px;overflow-y:auto;padding-right:4px}
+  .comments-list::-webkit-scrollbar{width:4px}
+  .comments-list::-webkit-scrollbar-track{background:transparent}
+  .comments-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+  .comment-item{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;position:relative}
+  .comment-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px}
+  .comment-author{display:flex;align-items:center;gap:7px}
+  .comment-avatar{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+  .comment-name{font-size:12px;font-weight:600}
+  .comment-date{font-size:10px;color:var(--dim);white-space:nowrap}
+  .comment-text{font-size:13px;line-height:1.55;color:var(--text);word-break:break-word}
+  .comment-delete{background:transparent;border:none;color:var(--dim);cursor:pointer;font-size:13px;padding:2px 4px;border-radius:3px;transition:color .15s;flex-shrink:0;line-height:1}
+  .comment-delete:hover{color:var(--vencida)}
+  .comment-input-wrap{display:flex;gap:8px;align-items:flex-end}
+  .comment-textarea{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;outline:none;resize:none;min-height:40px;max-height:100px;transition:border-color .15s;line-height:1.4}
+  .comment-textarea:focus{border-color:#3b82f6}
+  .comment-send{padding:9px 14px;background:#3b82f6;border:none;border-radius:var(--radius-sm);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background .15s;white-space:nowrap;flex-shrink:0}
+  .comment-send:hover{background:#2563eb}
+  .comment-send:disabled{background:var(--dim);cursor:not-allowed}
+  .comments-empty{text-align:center;padding:20px;color:var(--dim);font-size:13px}
+  .modal.modal-wide{max-width:680px}
 
   /* ── LOGIN ── */
   .login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;padding:24px}
@@ -413,9 +439,20 @@
 
 <!-- MODAL DETALLE TAREA -->
 <div class="overlay" id="overlay-detail">
-  <div class="modal">
+  <div class="modal modal-wide">
     <div class="modal-header"><span class="modal-title" id="detail-title"></span><button class="modal-close" onclick="closeModal('overlay-detail')">✕</button></div>
-    <div class="modal-body" id="detail-body"></div>
+    <div class="modal-body">
+      <div id="detail-body"></div>
+      <!-- COMMENTS -->
+      <div class="comments-section">
+        <div class="comments-title">💬 Comentarios y seguimiento</div>
+        <div class="comments-list" id="comments-list"><div class="comments-empty">Cargando…</div></div>
+        <div class="comment-input-wrap">
+          <textarea class="comment-textarea" id="comment-input" placeholder="Agrega un comentario o actualización…" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendComment()}"></textarea>
+          <button class="comment-send" id="comment-send-btn" onclick="sendComment()">Enviar</button>
+        </div>
+      </div>
+    </div>
     <div class="modal-footer"><button class="btn" onclick="closeModal('overlay-detail')">Cerrar</button><button class="btn btn-primary" onclick="editFromDetail()">Editar</button></div>
   </div>
 </div>
@@ -794,6 +831,7 @@ function openDetail(taskId){
   document.getElementById('detail-title').innerHTML=`<span class="cod-tag">${t.id}</span> &nbsp;${t.descripcion}`;
   document.getElementById('detail-body').innerHTML=`<div class="detail-grid"><div class="detail-item"><div class="detail-label">Proyecto</div><div class="detail-value">${t.proyecto}</div></div><div class="detail-item"><div class="detail-label">Categoría</div><div class="detail-value">${t.categoria||'—'}</div></div><div class="detail-item"><div class="detail-label">Persona</div><div class="detail-value">${personaChip(t.persona)}</div></div><div class="detail-item"><div class="detail-label">Estado</div><div class="detail-value"><span class="badge ${estCls}">${t.estado}</span></div></div><div class="detail-item"><div class="detail-label">Prioridad</div><div class="detail-value"><span class="badge ${prioCls}">${t.prioridad}</span></div></div><div class="detail-item"><div class="detail-label">Alerta</div><div class="detail-value">${al.txt}</div></div><div class="detail-item"><div class="detail-label">Fecha límite</div><div class="detail-value">${fmtFecha(t.fecha)}</div></div><div class="detail-item"><div class="detail-label">Días restantes</div><div class="detail-value" style="font-family:'JetBrains Mono',monospace">${d===null?'—':d===0?'Hoy':d<0?`${d} (vencida)`:'+'+d+' días'}</div></div><div class="detail-item"><div class="detail-label">Creada el</div><div class="detail-value">${t.created_at?fmtFechaCorta(t.created_at):'—'}</div></div></div>${t.notas?`<div class="detail-label" style="margin-bottom:6px">Notas</div><div class="detail-notes">${t.notas}</div>`:''}`;
   document.getElementById('overlay-detail').classList.add('open');
+  loadComments(taskId);
 }
 function editFromDetail(){if(detailTaskId)openEdit(detailTaskId)}
 
@@ -1100,6 +1138,120 @@ function closeQE() {
 }
 
 document.addEventListener('click', () => closeQE());
+
+
+// ── COMMENTS ─────────────────────────────────────────────────
+let currentCommentTaskId = null;
+
+async function loadComments(taskId) {
+  currentCommentTaskId = taskId;
+  const list = document.getElementById('comments-list');
+  list.innerHTML = '<div class="comments-empty">Cargando…</div>';
+  try {
+    const { data, error } = await sb
+      .from('comentarios')
+      .select('*')
+      .eq('tarea_id', taskId)
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    renderComments(data || []);
+  } catch(e) {
+    list.innerHTML = '<div class="comments-empty">Error al cargar comentarios</div>';
+  }
+}
+
+function renderComments(comments) {
+  const list = document.getElementById('comments-list');
+  if (!comments.length) {
+    list.innerHTML = '<div class="comments-empty">Aún no hay comentarios. ¡Sé el primero!</div>';
+    return;
+  }
+  list.innerHTML = comments.map(c => {
+    const col = personaColor(c.autor);
+    const ini = initials(c.autor);
+    const fecha = c.created_at ? fmtFechaHora(c.created_at) : '—';
+    const canDelete = isAdmin() || (currentUser && currentUser.nombre === c.autor);
+    return `<div class="comment-item" id="comment-${c.id}">
+      <div class="comment-header">
+        <div class="comment-author">
+          <div class="comment-avatar" style="background:${col}22;color:${col}">${ini}</div>
+          <span class="comment-name" style="color:${col}">${c.autor}</span>
+          <span class="comment-date">${fecha}</span>
+        </div>
+        ${canDelete ? `<button class="comment-delete" onclick="deleteComment('${c.id}')" title="Eliminar comentario">✕</button>` : ''}
+      </div>
+      <div class="comment-text">${escapeHtml(c.texto)}</div>
+    </div>`;
+  }).join('');
+  // Scroll to bottom
+  list.scrollTop = list.scrollHeight;
+}
+
+async function sendComment() {
+  const input = document.getElementById('comment-input');
+  const btn = document.getElementById('comment-send-btn');
+  const texto = input.value.trim();
+  if (!texto || !currentCommentTaskId) return;
+  btn.disabled = true;
+  try {
+    const { error } = await sb.from('comentarios').insert({
+      tarea_id: currentCommentTaskId,
+      autor: currentUser ? currentUser.nombre : 'Desconocido',
+      texto: texto,
+      created_at: new Date().toISOString()
+    });
+    if (error) throw error;
+    input.value = '';
+    input.style.height = 'auto';
+    await loadComments(currentCommentTaskId);
+  } catch(e) {
+    showToast('Error al enviar: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    input.focus();
+  }
+}
+
+async function deleteComment(commentId) {
+  if (!confirm('¿Eliminar este comentario?')) return;
+  try {
+    const { error } = await sb.from('comentarios').delete().eq('id', commentId);
+    if (error) throw error;
+    await loadComments(currentCommentTaskId);
+  } catch(e) {
+    showToast('Error al eliminar: ' + e.message, 'error');
+  }
+}
+
+function fmtFechaHora(isoStr) {
+  if (!isoStr) return '—';
+  const d = new Date(isoStr);
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const ayer = new Date(hoy); ayer.setDate(ayer.getDate()-1);
+  const fecha = new Date(d); fecha.setHours(0,0,0,0);
+  const hora = d.toLocaleTimeString('es-EC', {hour:'2-digit', minute:'2-digit'});
+  if (fecha.getTime() === hoy.getTime()) return `Hoy ${hora}`;
+  if (fecha.getTime() === ayer.getTime()) return `Ayer ${hora}`;
+  return d.toLocaleDateString('es-EC',{day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' + hora;
+}
+
+function escapeHtml(str) {
+  return (str||'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/\n/g,'<br>');
+}
+
+// Auto-resize comment textarea
+document.addEventListener('DOMContentLoaded', () => {
+  const ta = document.getElementById('comment-input');
+  if (ta) ta.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+  });
+});
 
 if(!checkSession()){/* wait for login */}
 </script>
