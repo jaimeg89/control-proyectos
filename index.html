@@ -539,7 +539,7 @@
         </div>
       </div>
     </div>
-    <div class="modal-footer"><button class="btn" onclick="closeModal('overlay-detail')">Cerrar</button><button class="btn btn-primary" onclick="editFromDetail()">Editar</button></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('overlay-detail')">Cerrar</button><button class="btn btn-primary" id="btn-edit-detail" onclick="editFromDetail()">Editar</button></div>
   </div>
 </div>
 
@@ -735,9 +735,28 @@ function renderDashboard(){
   document.getElementById('dash-alertas').innerHTML=urgentes.length?urgentes.map(t=>{const d=diasRestantes(t.fecha),cls=d<0?'vencida':'urgente',dstr=d<0?`Vencida hace ${Math.abs(d)}d`:d===0?'Vence hoy':`${d}d`;return`<div class="alert-item" onclick="openDetail('${t.id}')"><div class="alert-dot ${cls}"></div><div class="alert-info"><div class="alert-title">${t.descripcion}</div><div class="alert-meta">${t.proyecto} · ${personaChip(t.persona)} · ${dstr}</div></div></div>`}).join(''):'<div class="empty-state"><div class="empty-icon">✅</div>Sin alertas urgentes</div>';
   document.getElementById('dash-personas').innerHTML=personas.map(p=>{const pt=list.filter(t=>t.persona===p.nombre),ptot=pt.length,pcomp=pt.filter(t=>t.estado==='Completada').length,pcurs=pt.filter(t=>t.estado==='En curso').length,ppend=pt.filter(t=>t.estado==='Pendiente').length,pct=ptot?Math.round(pcomp/ptot*100):0;return`<div class="person-row"><div class="person-avatar" style="background:${p.color}22;color:${p.color}">${initials(p.nombre)}</div><div class="person-name" style="color:${p.color}">${p.nombre}</div><div class="bar-wrap"><div class="bar-fill" style="width:${pct}%;background:${p.color}"></div></div><div class="person-stats"><div class="person-stat-item"><strong style="color:var(--encurso-c)">${pcurs}</strong>curso</div><div class="person-stat-item"><strong style="color:var(--pendiente-c)">${ppend}</strong>pend.</div><div class="person-stat-item"><strong style="color:${p.color}">${pct}%</strong>done</div></div></div>`}).join('');
   const projsConTareas=[...new Set(list.map(t=>t.proyecto))];
-  document.getElementById('dash-proyectos').innerHTML=projsConTareas.map(pn=>{const pi=projects.find(p=>p.nombre===pn),pt=list.filter(t=>t.proyecto===pn&&t.estado!=='Completada');return`<div class="proj-chip"><div class="proj-chip-left"><span class="proj-code">${pi?.codigo||''}</span><span class="proj-name-dash">${pn}</span></div><div style="display:flex;align-items:center;gap:8px;flex-shrink:0"><span class="proj-etapa ${etapaClass(pi?.etapa)}">${pi?.etapa||''}</span><span style="font-size:11px;color:var(--muted)">${pt.length} pend.</span></div></div>`}).join('')||'<div style="color:var(--muted);font-size:13px">Sin tareas activas</div>';
+    // Show ALL projects, clickable to filter tasks
+  const allProjs = activeUser==='todos' ? projects : projects.filter(p=>p.persona===activeUser);
+  document.getElementById('dash-proyectos').innerHTML = allProjs.length ? allProjs.map(pi=>{
+    const pt=tasks.filter(t=>t.proyecto===pi.nombre&&t.estado!=='Completada'&&(activeUser==='todos'||t.persona===activeUser));
+    return`<div class="proj-chip" style="cursor:pointer" onclick="filterByProject('${pi.nombre}')" title="Ver tareas de ${pi.nombre}">
+      <div class="proj-chip-left"><span class="proj-code">${pi.codigo||''}</span><span class="proj-name-dash">${pi.nombre}</span></div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="proj-etapa ${etapaClass(pi.etapa)}">${pi.etapa||''}</span>
+        <span style="font-size:11px;color:var(--muted)">${pt.length} pend.</span>
+      </div>
+    </div>`;
+  }).join('') : '<div style="color:var(--muted);font-size:13px">Sin proyectos</div>';
   const estados=['Pendiente','En curso','Completada','Bloqueada'],cols={'Pendiente':'var(--pendiente-c)','En curso':'var(--encurso-c)','Completada':'var(--complet-c)','Bloqueada':'var(--bloq-c)'};
-  document.getElementById('dash-estado').innerHTML=estados.map(e=>{const cnt=list.filter(t=>t.estado===e).length,pct=total?Math.round(cnt/total*100):0;return`<div class="person-row"><div style="width:90px;font-size:12px;font-weight:600;color:${cols[e]}">${e}</div><div class="bar-wrap"><div class="bar-fill" style="width:${pct}%;background:${cols[e]}"></div></div><div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:${cols[e]};width:28px;text-align:right">${cnt}</div><div style="font-size:11px;color:var(--dim);width:32px;text-align:right">${pct}%</div></div>`}).join('');
+    document.getElementById('dash-estado').innerHTML=estados.map(e=>{
+    const cnt=list.filter(t=>t.estado===e).length,pct=total?Math.round(cnt/total*100):0;
+    return`<div class="person-row" style="cursor:pointer" onclick="filterByEstado('${e}')" title="Ver tareas ${e}">
+      <div style="width:90px;font-size:12px;font-weight:600;color:${cols[e]}">${e}</div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%;background:${cols[e]}"></div></div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:${cols[e]};width:28px;text-align:right">${cnt}</div>
+      <div style="font-size:11px;color:var(--muted);width:32px;text-align:right">${pct}%</div>
+    </div>`;
+  }).join('');
 }
 
 // ── Tareas ────────────────────────────────────────────────────
@@ -750,14 +769,17 @@ function renderTareas(){
   if(!list.length){tbody.innerHTML=`<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">🔍</div>No hay tareas que coincidan</div></td></tr>`;return}
   tbody.innerHTML=list.map(t=>{
     const d=diasRestantes(t.fecha),al=alerta(t),rowCls=t.estado==='Completada'?'row-completada':(d!==null&&d<0?'row-vencida':''),diasStr=d===null?'—':d===0?'Hoy':d<0?`${d}d`:`+${d}d`,diasCls=d===null?'':d<0?'neg':d<=7?'warn':'',estCls=t.estado.toLowerCase().replace(' ','-').replace('ó','o'),prioCls=(t.prioridad||'').toLowerCase();
-    return`<tr class="${rowCls}" onclick="openDetail('${t.id}')"><td><div class="proj-tag">${t.proyecto}</div><div class="cod-tag">${t.categoria}</div></td><td><div class="task-desc"><div class="task-desc-main">${t.descripcion}</div>${t.notas?`<div class="task-desc-sub">${t.notas}</div>`:''}</div></td><td>${personaChip(t.persona)}</td><td onclick="event.stopPropagation();openQE(event,'prioridad','${t.id}')"><span class="badge ${prioCls}" title="Click para cambiar">${t.prioridad} ▾</span></td><td onclick="event.stopPropagation();openQE(event,'estado','${t.id}')"><span class="badge ${estCls}" title="Click para cambiar">${t.estado} ▾</span></td><td><span class="fecha-cell">${fmtFecha(t.fecha)}</span></td><td><span class="dias-cell ${diasCls}">${diasStr}</span></td><td>${al.txt}</td><td><span class="fecha-cell" style="font-size:11px;color:var(--dim)">${t.created_at?fmtFechaCorta(t.created_at):'—'}</span></td></tr>`;
+    return`<tr class="${rowCls}" onclick="openDetail('${t.id}')"><td><div class="proj-tag">${t.proyecto}</div><div class="cod-tag">${t.categoria}</div></td><td><div class="task-desc"><div class="task-desc-main">${t.descripcion}</div>${t.notas?`<div class="task-desc-sub">${t.notas}</div>`:''}</div></td><td>${personaChip(t.persona)}</td><td onclick="event.stopPropagation();if(!isRestricted())openQE(event,'prioridad','${t.id}')"><span class="badge ${prioCls}" title="${isRestricted()?'':'Click para cambiar'}">${t.prioridad}${isRestricted()?'':' ▾'}</span></td><td onclick="event.stopPropagation();if(!isRestricted())openQE(event,'estado','${t.id}')"><span class="badge ${estCls}" title="${isRestricted()?'':'Click para cambiar'}">${t.estado}${isRestricted()?'':' ▾'}</span></td><td><span class="fecha-cell">${fmtFecha(t.fecha)}</span></td><td><span class="dias-cell ${diasCls}">${diasStr}</span></td><td>${al.txt}</td><td><span class="fecha-cell" style="font-size:11px;color:var(--dim)">${t.created_at?fmtFechaCorta(t.created_at):'—'}</span></td></tr>`;
   }).join('');
 }
 function sortBy(col){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1}renderTareas()}
 
 // ── Proyectos ─────────────────────────────────────────────────
 function renderProyectos(){
-  const list=activeUser==='todos'?projects:projects.filter(p=>p.persona===activeUser);
+  const isRestricted = currentUser && currentUser.rol !== 'admin' && currentUser.nombre !== 'Jaime';
+  const list = isRestricted
+    ? projects.filter(p=>p.persona===currentUser.nombre)
+    : (activeUser==='todos'?projects:projects.filter(p=>p.persona===activeUser));
   if(!list.length){document.getElementById('proj-grid').innerHTML='<div class="empty-state"><div class="empty-icon">📁</div>No hay proyectos. Agrega uno con el botón de arriba.</div>';return}
   document.getElementById('proj-grid').innerHTML=list.map(p=>{
     const pcol=personaColor(p.persona);
@@ -862,6 +884,7 @@ function openNewTask(){
   document.getElementById('overlay-task').classList.add('open');
 }
 function openEdit(taskId){
+  if(isRestricted()){showToast('No tienes permiso para editar tareas','error');return;}
   const t=tasks.find(x=>x.id===taskId);if(!t)return;
   editingTaskId=taskId;
   document.getElementById('modal-task-title').textContent='Editar tarea';
@@ -921,6 +944,9 @@ function openDetail(taskId){
   document.getElementById('detail-title').textContent = t.descripcion;
   document.getElementById('detail-body').innerHTML=`<div class="detail-grid"><div class="detail-item"><div class="detail-label">Proyecto</div><div class="detail-value">${t.proyecto}</div></div><div class="detail-item"><div class="detail-label">Categoría</div><div class="detail-value">${t.categoria||'—'}</div></div><div class="detail-item"><div class="detail-label">Persona</div><div class="detail-value">${personaChip(t.persona)}</div></div><div class="detail-item"><div class="detail-label">Estado</div><div class="detail-value"><span class="badge ${estCls}">${t.estado}</span></div></div><div class="detail-item"><div class="detail-label">Prioridad</div><div class="detail-value"><span class="badge ${prioCls}">${t.prioridad}</span></div></div><div class="detail-item"><div class="detail-label">Alerta</div><div class="detail-value">${al.txt}</div></div><div class="detail-item"><div class="detail-label">Fecha límite</div><div class="detail-value">${fmtFecha(t.fecha)}</div></div><div class="detail-item"><div class="detail-label">Días restantes</div><div class="detail-value" style="font-family:'JetBrains Mono',monospace">${d===null?'—':d===0?'Hoy':d<0?`${d} (vencida)`:'+'+d+' días'}</div></div><div class="detail-item"><div class="detail-label">Creada el</div><div class="detail-value">${t.created_at?fmtFechaCorta(t.created_at):'—'}</div></div></div>${t.notas?`<div class="detail-label" style="margin-bottom:6px">Notas</div><div class="detail-notes">${t.notas}</div>`:''}`;
   document.getElementById('overlay-detail').classList.add('open');
+  // Show/hide edit button based on permissions
+  const btnEd = document.getElementById('btn-edit-detail');
+  if (btnEd) btnEd.style.display = isRestricted() ? 'none' : '';
   loadComments(taskId);
 }
 function editFromDetail(){if(detailTaskId)openEdit(detailTaskId)}
@@ -952,12 +978,27 @@ function openEditProject(projId){
 async function saveProject(){
   const nombre=document.getElementById('fp-nombre').value.trim();
   if(!nombre){showToast('El nombre es obligatorio','error');return}
-  const proj={nombre,codigo:document.getElementById('fp-codigo').value.trim(),etapa:document.getElementById('fp-etapa').value,persona:document.getElementById('fp-persona').value,ubicacion:document.getElementById('fp-ubicacion').value.trim(),cliente:document.getElementById('fp-cliente').value.trim()};
+  const nuevaPersona=document.getElementById('fp-persona').value;
+  const proj={nombre,codigo:document.getElementById('fp-codigo').value.trim(),etapa:document.getElementById('fp-etapa').value,persona:nuevaPersona,ubicacion:document.getElementById('fp-ubicacion').value.trim(),cliente:document.getElementById('fp-cliente').value.trim()};
   setSyncStatus('syncing');
   try{
     const{error}=editingProjectId?await sb.from('proyectos').update(proj).eq('id',editingProjectId):await sb.from('proyectos').insert(proj);
     if(error)throw error;
-    showToast(editingProjectId?'Proyecto actualizado':'Proyecto creado','success');
+    // If editing and persona changed, update all existing tasks of this project
+    if(editingProjectId){
+      const projAnterior=projects.find(p=>p.id===editingProjectId);
+      if(projAnterior && projAnterior.persona !== nuevaPersona){
+        const{error:te}=await sb.from('tareas')
+          .update({persona:nuevaPersona, updated_at:new Date().toISOString()})
+          .eq('proyecto', projAnterior.nombre);
+        if(te) console.warn('Error updating tasks persona:', te.message);
+        else showToast(`Proyecto y ${tasks.filter(t=>t.proyecto===projAnterior.nombre).length} tarea(s) reasignadas a ${nuevaPersona}`, 'success');
+      } else {
+        showToast('Proyecto actualizado','success');
+      }
+    } else {
+      showToast('Proyecto creado','success');
+    }
     closeModal('overlay-project');
   }catch(e){setSyncStatus('error');showToast('Error: '+e.message,'error')}
 }
@@ -1143,6 +1184,10 @@ function checkSession() {
 
 function onLoginSuccess() {
   applyUserPermissions();
+  // Restrict non-admin/non-jaime users to their own view
+  if(currentUser && currentUser.nombre !== 'Jaime' && currentUser.nombre !== 'Admin') {
+    activeUser = currentUser.nombre;
+  }
   loadAll();
   subscribeRealtime();
 }
@@ -1150,13 +1195,23 @@ function onLoginSuccess() {
 function applyUserPermissions() {
   if (!currentUser) return;
   const adminUser = currentUser.rol === 'admin';
+  const isRestricted = !adminUser && currentUser.nombre !== 'Jaime';
   // Show/hide project management buttons
   document.querySelectorAll('.proj-admin-only').forEach(el => {
     el.style.display = adminUser ? '' : 'none';
   });
-  // Show/hide eliminadas tab
+  // Show/hide eliminadas tab (admin only)
   const tabElim = document.getElementById('tab-eliminadas');
   if (tabElim) tabElim.style.display = adminUser ? '' : 'none';
+  // Show/hide personas tab (only in todos view, not restricted)
+  const tabPer = document.getElementById('tab-personas');
+  if (tabPer) tabPer.style.display = (!isRestricted && activeUser==='todos') ? '' : 'none';
+  // Hide user switcher for restricted users
+  const switcher = document.getElementById('user-switcher');
+  if (switcher) switcher.style.display = isRestricted ? 'none' : '';
+  // Show/hide edit button in task detail modal
+  const btnEditDetail = document.getElementById('btn-edit-detail');
+  if (btnEditDetail) btnEditDetail.style.display = isRestricted() ? 'none' : '';
   // Topbar user info
   const userInfo = document.getElementById('topbar-user-info');
   if (userInfo) {
@@ -1505,6 +1560,31 @@ document.addEventListener('DOMContentLoaded', () => {
     this.style.height = Math.min(this.scrollHeight, 100) + 'px';
   });
 });
+
+
+// ── Permission helpers ───────────────────────────────────────
+function isRestricted() {
+  if (!currentUser) return true;
+  return currentUser.rol !== 'admin' && currentUser.nombre !== 'Jaime';
+}
+
+// ── Dashboard quick filters ───────────────────────────────────
+function filterByProject(nombre) {
+  showTab('tareas');
+  // Wait for tab to render then set filter
+  setTimeout(() => {
+    const sel = document.getElementById('fil-proyecto');
+    if(sel) { sel.value = nombre; renderTareas(); }
+  }, 50);
+}
+
+function filterByEstado(estado) {
+  showTab('tareas');
+  setTimeout(() => {
+    const sel = document.getElementById('fil-estado');
+    if(sel) { sel.value = estado; renderTareas(); }
+  }, 50);
+}
 
 if(!checkSession()){/* wait for login */}
 </script>
