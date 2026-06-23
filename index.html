@@ -201,6 +201,56 @@
   .qe-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
 
+
+  /* ── CALENDAR PICKER ── */
+  .cal-wrap{position:relative}
+  .cal-input-btn{
+    width:100%;background:var(--surface2);border:1px solid var(--border);
+    border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);
+    font-size:13px;font-family:'Inter',sans-serif;outline:none;
+    cursor:pointer;text-align:left;display:flex;align-items:center;
+    justify-content:space-between;gap:8px;transition:border-color .15s;
+  }
+  .cal-input-btn:hover,.cal-input-btn:focus{border-color:#3b82f6}
+  .cal-input-btn .cal-icon{font-size:14px;flex-shrink:0;color:var(--muted)}
+  .cal-input-btn .cal-clear{font-size:11px;color:var(--dim);cursor:pointer;padding:0 2px;flex-shrink:0}
+  .cal-input-btn .cal-clear:hover{color:var(--vencida)}
+  .cal-dropdown{
+    display:none;position:absolute;top:calc(100% + 6px);left:0;
+    background:var(--surface);border:1px solid var(--border2);
+    border-radius:var(--radius);padding:12px;z-index:250;
+    width:280px;box-shadow:0 12px 32px rgba(0,0,0,.5);
+  }
+  .cal-dropdown.open{display:block}
+  .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .cal-nav-btn{
+    background:var(--surface2);border:1px solid var(--border);
+    border-radius:var(--radius-sm);width:28px;height:28px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;color:var(--text);font-size:14px;transition:all .15s;
+  }
+  .cal-nav-btn:hover{border-color:#3b82f6;color:#3b82f6}
+  .cal-month-label{font-size:13px;font-weight:600;color:var(--text);cursor:pointer;user-select:none}
+  .cal-month-label:hover{color:#3b82f6}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+  .cal-dow{font-size:10px;font-weight:600;text-align:center;color:var(--dim);padding:4px 0;text-transform:uppercase}
+  .cal-day{
+    font-size:12px;text-align:center;padding:6px 2px;border-radius:6px;
+    cursor:pointer;color:var(--text);transition:all .1s;min-height:28px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .cal-day:hover{background:var(--surface2);color:#3b82f6}
+  .cal-day.today{font-weight:700;color:#3b82f6;background:var(--jaime-bg)}
+  .cal-day.selected{background:#3b82f6;color:#fff!important;font-weight:700}
+  .cal-day.other-month{color:var(--dim)}
+  .cal-day.disabled{color:var(--dim);cursor:default;opacity:.4}
+  .cal-day:empty{cursor:default}
+  .cal-footer{display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+  .cal-today-btn{font-size:12px;color:#3b82f6;background:transparent;border:none;cursor:pointer;font-family:'Inter',sans-serif;padding:0}
+  .cal-today-btn:hover{text-decoration:underline}
+  .cal-clear-btn{font-size:12px;color:var(--muted);background:transparent;border:none;cursor:pointer;font-family:'Inter',sans-serif;padding:0}
+  .cal-clear-btn:hover{color:var(--vencida)}
+
   /* ── COMMENTS ── */
   .comments-section{margin-top:20px;border-top:1px solid var(--border);padding-top:16px}
   .comments-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px}
@@ -424,7 +474,27 @@
         <div class="form-group"><label class="form-label">Estado</label><select id="f-estado"><option selected>Pendiente</option><option>En curso</option><option>Completada</option><option>Bloqueada</option></select></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label class="form-label">Fecha límite</label><input type="date" id="f-fecha"></div>
+        <div class="form-group"><label class="form-label">Fecha límite</label>
+          <div class="cal-wrap" id="cal-wrap-fecha">
+            <button type="button" class="cal-input-btn" id="f-fecha-btn" onclick="toggleCal('fecha')">
+              <span id="f-fecha-display" style="color:var(--muted)">Seleccionar fecha…</span>
+              <span class="cal-icon">📅</span>
+            </button>
+            <div class="cal-dropdown" id="cal-dropdown-fecha">
+              <div class="cal-nav">
+                <button type="button" class="cal-nav-btn" onclick="calNav('fecha',-1)">‹</button>
+                <span class="cal-month-label" id="cal-label-fecha"></span>
+                <button type="button" class="cal-nav-btn" onclick="calNav('fecha',1)">›</button>
+              </div>
+              <div class="cal-grid" id="cal-grid-fecha"></div>
+              <div class="cal-footer">
+                <button type="button" class="cal-today-btn" onclick="calSelectToday('fecha')">Hoy</button>
+                <button type="button" class="cal-clear-btn" onclick="calClear('fecha')">Limpiar</button>
+              </div>
+            </div>
+          </div>
+          <input type="hidden" id="f-fecha">
+        </div>
         <div class="form-group"><label class="form-label">Responsable</label><select id="f-persona"></select></div>
       </div>
       <div class="form-row full"><div class="form-group"><label class="form-label">Notas</label><textarea id="f-notas" placeholder="Información adicional…"></textarea></div></div>
@@ -766,7 +836,8 @@ function openNewTask(){
     const firstProj=document.getElementById('f-proyecto').value;
     if(firstProj)autoAssignPersona(firstProj);
   }
-  ['f-desc','f-notas','f-fecha','f-categoria'].forEach(id=>document.getElementById(id).value='');
+  ['f-desc','f-notas','f-categoria'].forEach(id=>document.getElementById(id).value='');
+  setCalValue('fecha', null);
   document.getElementById('f-prioridad').value='Media';
   document.getElementById('f-estado').value='Pendiente';
   document.getElementById('overlay-task').classList.add('open');
@@ -782,7 +853,7 @@ function openEdit(taskId){
   document.getElementById('f-desc').value=t.descripcion;
   document.getElementById('f-prioridad').value=t.prioridad||'Media';
   document.getElementById('f-estado').value=t.estado||'Pendiente';
-  document.getElementById('f-fecha').value=t.fecha||'';
+  setCalValue('fecha', t.fecha||null);
   // Auto-assign and lock persona based on project
   autoAssignPersona(t.proyecto);
   // Override with saved persona in case project assignment changed
@@ -1084,60 +1155,223 @@ function logout() {
 function isAdmin() { return currentUser && currentUser.rol === 'admin'; }
 
 
+
+// ── CALENDAR PICKER ──────────────────────────────────────────
+const calState = {};
+
+function initCal(id, selectedDate) {
+  const now = selectedDate ? new Date(selectedDate + 'T12:00:00') : new Date();
+  calState[id] = {
+    year:  now.getFullYear(),
+    month: now.getMonth(),
+    selected: selectedDate || null
+  };
+  renderCal(id);
+  updateCalDisplay(id);
+}
+
+function toggleCal(id) {
+  const drop = document.getElementById('cal-dropdown-' + id);
+  const isOpen = drop.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.cal-dropdown.open').forEach(d => d.classList.remove('open'));
+  if (!isOpen) {
+    if (!calState[id]) initCal(id, null);
+    renderCal(id);
+    drop.classList.add('open');
+  }
+}
+
+function calNav(id, dir) {
+  const s = calState[id];
+  s.month += dir;
+  if (s.month > 11) { s.month = 0; s.year++; }
+  if (s.month < 0)  { s.month = 11; s.year--; }
+  renderCal(id);
+}
+
+function renderCal(id) {
+  const s = calState[id];
+  const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const DAYS   = ['Lu','Ma','Mi','Ju','Vi','Sá','Do'];
+  document.getElementById('cal-label-' + id).textContent = MONTHS[s.month] + ' ' + s.year;
+
+  const grid = document.getElementById('cal-grid-' + id);
+  let html = DAYS.map(d => `<div class="cal-dow">${d}</div>`).join('');
+
+  const first = new Date(s.year, s.month, 1);
+  const last  = new Date(s.year, s.month + 1, 0);
+  // Monday-based: 0=Mon … 6=Sun
+  let startDow = first.getDay() - 1; if (startDow < 0) startDow = 6;
+
+  const todayStr = toDateStr(new Date());
+
+  // Previous month padding
+  for (let i = 0; i < startDow; i++) {
+    const d = new Date(s.year, s.month, -startDow + i + 1);
+    html += `<div class="cal-day other-month" onclick="calSelect('${id}','${toDateStr(d)}')">${d.getDate()}</div>`;
+  }
+  // Current month
+  for (let d = 1; d <= last.getDate(); d++) {
+    const dateStr = toDateStr(new Date(s.year, s.month, d));
+    const cls = [
+      'cal-day',
+      dateStr === todayStr    ? 'today'    : '',
+      dateStr === s.selected  ? 'selected' : '',
+    ].filter(Boolean).join(' ');
+    html += `<div class="${cls}" onclick="calSelect('${id}','${dateStr}')">${d}</div>`;
+  }
+  // Next month padding
+  const remaining = 42 - startDow - last.getDate();
+  for (let i = 1; i <= remaining; i++) {
+    const d = new Date(s.year, s.month + 1, i);
+    html += `<div class="cal-day other-month" onclick="calSelect('${id}','${toDateStr(d)}')">${d.getDate()}</div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+function calSelect(id, dateStr) {
+  if (!calState[id]) calState[id] = {};
+  calState[id].selected = dateStr;
+  // Set hidden input value
+  document.getElementById('f-' + id).value = dateStr;
+  updateCalDisplay(id);
+  renderCal(id);
+  // Close dropdown
+  document.getElementById('cal-dropdown-' + id).classList.remove('open');
+}
+
+function calSelectToday(id) {
+  calSelect(id, toDateStr(new Date()));
+}
+
+function calClear(id) {
+  if (calState[id]) calState[id].selected = null;
+  document.getElementById('f-' + id).value = '';
+  updateCalDisplay(id);
+  if (calState[id]) renderCal(id);
+  document.getElementById('cal-dropdown-' + id).classList.remove('open');
+}
+
+function updateCalDisplay(id) {
+  const val = document.getElementById('f-' + id).value;
+  const disp = document.getElementById('f-' + id + '-display');
+  if (!disp) return;
+  if (val) {
+    const [y,m,d] = val.split('-');
+    disp.textContent = `${d}/${m}/${y}`;
+    disp.style.color = 'var(--text)';
+  } else {
+    disp.textContent = 'Seleccionar fecha…';
+    disp.style.color = 'var(--muted)';
+  }
+}
+
+function setCalValue(id, dateStr) {
+  document.getElementById('f-' + id).value = dateStr || '';
+  if (dateStr) {
+    const parts = dateStr.split('-');
+    initCal(id, dateStr);
+  } else {
+    if (calState[id]) calState[id].selected = null;
+    updateCalDisplay(id);
+  }
+}
+
+function toDateStr(d) {
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
+}
+
+// Close calendar when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('.cal-wrap')) {
+    document.querySelectorAll('.cal-dropdown.open').forEach(d => d.classList.remove('open'));
+  }
+});
+
 // ── QUICK EDIT (inline prioridad/estado) ─────────────────────
 let qeTaskId = null, qeField = null;
 
 const QE_OPTIONS = {
   prioridad: [
-    {val:'Alta',   color:'#ef4444', bg:'#3b0f0f'},
-    {val:'Media',  color:'#f59e0b', bg:'#3b2800'},
-    {val:'Baja',   color:'#9ca3af', bg:'#1f2937'},
+    {val:'Alta',   color:'#ef4444'},
+    {val:'Media',  color:'#f59e0b'},
+    {val:'Baja',   color:'#9ca3af'},
   ],
   estado: [
-    {val:'Pendiente',  color:'#94a3b8', bg:'#1e293b'},
-    {val:'En curso',   color:'#3b82f6', bg:'#1e3a5f'},
-    {val:'Completada', color:'#10b981', bg:'#0a3325'},
-    {val:'Bloqueada',  color:'#f59e0b', bg:'#3b2800'},
+    {val:'Pendiente',  color:'#94a3b8'},
+    {val:'En curso',   color:'#3b82f6'},
+    {val:'Completada', color:'#10b981'},
+    {val:'Bloqueada',  color:'#f59e0b'},
   ]
 };
 
 function openQE(event, field, taskId) {
-  qeTaskId = taskId; qeField = field;
+  event.stopPropagation();
+  // Toggle: if same menu open, close it
   const menu = document.getElementById('qe-menu');
-  const items = document.getElementById('qe-items');
+  if (menu.classList.contains('open') && qeTaskId===taskId && qeField===field) {
+    menu.classList.remove('open');
+    qeTaskId=null; qeField=null;
+    return;
+  }
+  qeTaskId = taskId;
+  qeField  = field;
   const opts = QE_OPTIONS[field];
-  const cur = tasks.find(t=>t.id===taskId)?.[field];
-  items.innerHTML = opts.map(o =>
-    `<div class="qe-item${o.val===cur?' selected':''}" onclick="applyQE('${o.val}')" style="color:${o.color}">
-      <div class="qe-dot" style="background:${o.color}"></div>${o.val}${o.val===cur?' ✓':''}
+  const cur  = tasks.find(t=>t.id===taskId)?.[field];
+  document.getElementById('qe-items').innerHTML = opts.map(o =>
+    `<div class="qe-item${o.val===cur?' selected':''}" style="color:${o.color}"
+      onmousedown="event.preventDefault();applyQE('${o.val}','${taskId}','${field}')">
+      <div class="qe-dot" style="background:${o.color}"></div>
+      ${o.val}${o.val===cur?' ✓':''}
     </div>`
   ).join('');
-  // Position near click
-  const x = Math.min(event.clientX, window.innerWidth-160);
-  const y = Math.min(event.clientY+4, window.innerHeight-200);
-  menu.style.left = x+'px';
-  menu.style.top  = y+'px';
+  // Position near click — keep inside viewport
+  const x = Math.min(event.clientX, window.innerWidth - 165);
+  const y = Math.min(event.clientY + 6, window.innerHeight - 220);
+  menu.style.left = x + 'px';
+  menu.style.top  = y + 'px';
   menu.classList.add('open');
-  event.stopPropagation();
 }
 
-async function applyQE(value) {
-  closeQE();
-  if(!qeTaskId||!qeField) return;
+// Accept taskId and field as explicit params to avoid closure issues
+async function applyQE(value, taskId, field) {
+  document.getElementById('qe-menu').classList.remove('open');
+  qeTaskId = null; qeField = null;
+  if (!taskId || !field) return;
+  // Optimistic local update
+  const t = tasks.find(x => x.id === taskId);
+  const prev = t ? t[field] : null;
+  if (t) t[field] = value;
+  renderTareas();
   setSyncStatus('syncing');
   try {
-    const{error}=await sb.from('tareas').update({[qeField]:value,updated_at:new Date().toISOString()}).eq('id',qeTaskId);
-    if(error) throw error;
-    showToast(`${qeField==='prioridad'?'Prioridad':'Estado'} actualizado`,'success');
-  } catch(e) { setSyncStatus('error'); showToast('Error: '+e.message,'error'); }
+    const { error } = await sb.from('tareas')
+      .update({ [field]: value, updated_at: new Date().toISOString() })
+      .eq('id', taskId);
+    if (error) throw error;
+    setSyncStatus('ok');
+    showToast((field==='prioridad'?'Prioridad':'Estado') + ' actualizado ✓', 'success');
+  } catch(e) {
+    // Revert
+    if (t && prev !== null) t[field] = prev;
+    renderTareas();
+    setSyncStatus('error');
+    showToast('Error al guardar: ' + e.message, 'error');
+  }
 }
 
-function closeQE() {
-  document.getElementById('qe-menu').classList.remove('open');
-  qeTaskId=null; qeField=null;
-}
-
-document.addEventListener('click', () => closeQE());
+// Close QE when clicking outside
+document.addEventListener('click', e => {
+  const menu = document.getElementById('qe-menu');
+  if (menu && !menu.contains(e.target)) {
+    menu.classList.remove('open');
+    qeTaskId = null; qeField = null;
+  }
+});
 
 
 // ── COMMENTS ─────────────────────────────────────────────────
