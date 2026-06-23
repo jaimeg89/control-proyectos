@@ -765,15 +765,15 @@ function renderTareas(){
   if(!list.length){tbody.innerHTML=`<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">🔍</div>No hay tareas que coincidan</div></td></tr>`;return}
   tbody.innerHTML=list.map(t=>{
     const d=diasRestantes(t.fecha),al=alerta(t),rowCls=t.estado==='Completada'?'row-completada':(d!==null&&d<0?'row-vencida':''),diasStr=d===null?'—':d===0?'Hoy':d<0?`${d}d`:`+${d}d`,diasCls=d===null?'':d<0?'neg':d<=7?'warn':'',estCls=t.estado.toLowerCase().replace(' ','-').replace('ó','o'),prioCls=(t.prioridad||'').toLowerCase();
-    return`<tr class="${rowCls}" onclick="openDetail('${t.id}')"><td><div class="proj-tag">${t.proyecto}</div><div class="cod-tag">${t.categoria}</div></td><td><div class="task-desc"><div class="task-desc-main">${t.descripcion}</div>${t.notas?`<div class="task-desc-sub">${t.notas}</div>`:''}</div></td><td>${personaChip(t.persona)}</td><td onclick="event.stopPropagation();if(!isRestricted())openQE(event,'prioridad','${t.id}')"><span class="badge ${prioCls}" title="${isRestricted()?'':'Click para cambiar'}">${t.prioridad}${isRestricted()?'':' ▾'}</span></td><td onclick="event.stopPropagation();if(!isRestricted())openQE(event,'estado','${t.id}')"><span class="badge ${estCls}" title="${isRestricted()?'':'Click para cambiar'}">${t.estado}${isRestricted()?'':' ▾'}</span></td><td><span class="fecha-cell">${fmtFecha(t.fecha)}</span></td><td><span class="dias-cell ${diasCls}">${diasStr}</span></td><td>${al.txt}</td><td><span class="fecha-cell" style="font-size:11px;color:var(--dim)">${t.created_at?fmtFechaCorta(t.created_at):'—'}</span></td></tr>`;
+    return`<tr class="${rowCls}" onclick="openDetail('${t.id}')"><td><div class="proj-tag">${t.proyecto}</div><div class="cod-tag">${t.categoria}</div></td><td><div class="task-desc"><div class="task-desc-main">${t.descripcion}</div>${t.notas?`<div class="task-desc-sub">${t.notas}</div>`:''}</div></td><td>${personaChip(t.persona)}</td><td onclick="event.stopPropagation();if(!checkRestricted())openQE(event,'prioridad','${t.id}')"><span class="badge ${prioCls}" title="${checkRestricted()?'':'Click para cambiar'}">${t.prioridad}${checkRestricted()?'':' ▾'}</span></td><td onclick="event.stopPropagation();if(!checkRestricted())openQE(event,'estado','${t.id}')"><span class="badge ${estCls}" title="${checkRestricted()?'':'Click para cambiar'}">${t.estado}${checkRestricted()?'':' ▾'}</span></td><td><span class="fecha-cell">${fmtFecha(t.fecha)}</span></td><td><span class="dias-cell ${diasCls}">${diasStr}</span></td><td>${al.txt}</td><td><span class="fecha-cell" style="font-size:11px;color:var(--dim)">${t.created_at?fmtFechaCorta(t.created_at):'—'}</span></td></tr>`;
   }).join('');
 }
 function sortBy(col){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1}renderTareas()}
 
 // ── Proyectos ─────────────────────────────────────────────────
 function renderProyectos(){
-  const isRestricted = currentUser && currentUser.rol !== 'admin' && currentUser.nombre !== 'Jaime';
-  const list = isRestricted
+  const isRestrictedUser = currentUser && currentUser.rol !== 'admin' && currentUser.nombre !== 'Jaime';
+  const list = isRestrictedUser
     ? projects.filter(p=>p.persona===currentUser.nombre)
     : (activeUser==='todos'?projects:projects.filter(p=>p.persona===activeUser));
   if(!list.length){document.getElementById('proj-grid').innerHTML='<div class="empty-state"><div class="empty-icon">📁</div>No hay proyectos. Agrega uno con el botón de arriba.</div>';return}
@@ -880,7 +880,7 @@ function openNewTask(){
   document.getElementById('overlay-task').classList.add('open');
 }
 function openEdit(taskId){
-  if(isRestricted()){showToast('No tienes permiso para editar tareas','error');return;}
+  if(checkRestricted()){showToast('No tienes permiso para editar tareas','error');return;}
   const t=tasks.find(x=>x.id===taskId);if(!t)return;
   editingTaskId=taskId;
   document.getElementById('modal-task-title').textContent='Editar tarea';
@@ -942,7 +942,7 @@ function openDetail(taskId){
   document.getElementById('overlay-detail').classList.add('open');
   // Show/hide edit button based on permissions
   const btnEd = document.getElementById('btn-edit-detail');
-  if (btnEd) btnEd.style.display = isRestricted() ? 'none' : '';
+  if (btnEd) btnEd.style.display = checkRestricted() ? 'none' : '';
   loadComments(taskId);
 }
 function editFromDetail(){if(detailTaskId)openEdit(detailTaskId)}
@@ -1136,8 +1136,8 @@ const USERS = {
 
 let currentUser = null;
 
-// ── Permission helper (defined early so all functions can use it) ──
-function isRestricted() {
+// ── Permission helper ──────────────────────────────────────────
+function checkRestricted() {
   if (!currentUser) return true;
   return currentUser.rol !== 'admin' && currentUser.nombre !== 'Jaime';
 }
@@ -1213,7 +1213,7 @@ function applyUserPermissions() {
   if (switcher) switcher.style.display = isRestricted ? 'none' : '';
   // Show/hide edit button in task detail modal
   const btnEditDetail = document.getElementById('btn-edit-detail');
-  if (btnEditDetail) btnEditDetail.style.display = isRestricted() ? 'none' : '';
+  if (btnEditDetail) btnEditDetail.style.display = isRestricted ? 'none' : '';
   // Topbar user info
   const userInfo = document.getElementById('topbar-user-info');
   if (userInfo) {
