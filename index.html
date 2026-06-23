@@ -978,24 +978,40 @@ async function saveProject(){
   const proj={nombre,codigo:document.getElementById('fp-codigo').value.trim(),etapa:document.getElementById('fp-etapa').value,persona:nuevaPersona,ubicacion:document.getElementById('fp-ubicacion').value.trim(),cliente:document.getElementById('fp-cliente').value.trim()};
   setSyncStatus('syncing');
   try{
-    const{error}=editingProjectId?await sb.from('proyectos').update(proj).eq('id',editingProjectId):await sb.from('proyectos').insert(proj);
-    if(error)throw error;
-    // If editing and persona changed, update all existing tasks of this project
     if(editingProjectId){
+      // Capture old project data BEFORE updating
       const projAnterior=projects.find(p=>p.id===editingProjectId);
-      if(projAnterior && projAnterior.persona !== nuevaPersona){
-        const{error:te}=await sb.from('tareas')
-          .update({persona:nuevaPersona, updated_at:new Date().toISOString()})
-          .eq('proyecto', projAnterior.nombre);
-        if(te) console.warn('Error updating tasks persona:', te.message);
-        else showToast(`Proyecto y ${tasks.filter(t=>t.proyecto===projAnterior.nombre).length} tarea(s) reasignadas a ${nuevaPersona}`, 'success');
-      } else {
-        showToast('Proyecto actualizado','success');
+      const nombreAnterior=projAnterior?projAnterior.nombre:'';
+      const personaAnterior=projAnterior?projAnterior.persona:'';
+
+      // 1. Update project
+      const{error}=await sb.from('proyectos').update(proj).eq('id',editingProjectId);
+      if(error)throw error;
+
+      // 2. If project name changed, update tasks to new project name
+      if(nombreAnterior && nombreAnterior !== nombre){
+        await sb.from('tareas').update({proyecto:nombre,updated_at:new Date().toISOString()}).eq('proyecto',nombreAnterior);
       }
+
+      // 3. If responsable changed, update ALL tasks of this project to new persona
+      const proyectoRef = nombreAnterior || nombre;
+      if(personaAnterior !== nuevaPersona){
+        const{error:te,count}=await sb.from('tareas')
+          .update({persona:nuevaPersona,updated_at:new Date().toISOString()})
+          .eq('proyecto', nombre)  // use new name (already updated)
+          .select('id',{count:'exact'});
+        if(te) console.warn('Error updating tasks:', te.message);
+      }
+      showToast('Proyecto actualizado y tareas reasignadas ✓','success');
     } else {
+      // New project
+      const{error}=await sb.from('proyectos').insert(proj);
+      if(error)throw error;
       showToast('Proyecto creado','success');
     }
     closeModal('overlay-project');
+    // Always reload all data to reflect changes everywhere
+    await loadAll();
   }catch(e){setSyncStatus('error');showToast('Error: '+e.message,'error')}
 }
 async function deleteProject(){
