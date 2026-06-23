@@ -672,7 +672,10 @@ function fmtFechaCorta(isoStr){
   const d=new Date(isoStr);
   return d.toLocaleDateString('es-EC',{day:'2-digit',month:'2-digit',year:'numeric'});
 }
-function nextTaskId(){const nums=tasks.map(t=>parseInt((t.id||'').replace('T-',''))).filter(n=>!isNaN(n));return'T-'+String((nums.length?Math.max(...nums):0)+1).padStart(3,'0')}
+function generateTaskId(){
+  // Generate a random UUID for each new task
+  return crypto.randomUUID ? crypto.randomUUID() : 'task-' + Date.now() + '-' + Math.random().toString(36).slice(2,8);
+}
 function personaColor(nombre){const p=personas.find(x=>x.nombre===nombre);return p?p.color:'#64748b'}
 function personaChip(nombre){const col=personaColor(nombre);return`<span class="person-chip" style="background:${col}22;color:${col}">${nombre||'—'}</span>`}
 function etapaClass(e=''){const l=e.toLowerCase();if(l.includes('diseño'))return'etapa-diseno';if(l.includes('construc'))return'etapa-construc';if(l.includes('cotiz'))return'etapa-cotizacion';return'etapa-estudios'}
@@ -691,8 +694,8 @@ function filteredTasks(){
   if(proj)list=list.filter(t=>t.proyecto===proj);
   return list;
 }
-const SORT_KEYS={id:t=>t.id,proyecto:t=>t.proyecto,persona:t=>t.persona,prioridad:t=>({'Alta':0,'Media':1,'Baja':2}[t.prioridad]??9),estado:t=>t.estado,fecha:t=>t.fecha||'9999',dias:t=>{const d=diasRestantes(t.fecha);return d===null?9999:d}};
-function sortTasks(list){const fn=SORT_KEYS[sortCol]||(t=>t.id);return[...list].sort((a,b)=>{const av=fn(a),bv=fn(b);return av<bv?-sortDir:av>bv?sortDir:0})}
+const SORT_KEYS={proyecto:t=>t.proyecto,persona:t=>t.persona,prioridad:t=>({'Alta':0,'Media':1,'Baja':2}[t.prioridad]??9),estado:t=>t.estado,fecha:t=>t.fecha||'9999',dias:t=>{const d=diasRestantes(t.fecha);return d===null?9999:d}};
+function sortTasks(list){const fn=SORT_KEYS[sortCol]||(t=>t.proyecto);return[...list].sort((a,b)=>{const av=fn(a),bv=fn(b);return av<bv?-sortDir:av>bv?sortDir:0})}
 
 // ── User Switcher (dynamic) ───────────────────────────────────
 function renderUserSwitcher(){
@@ -726,7 +729,7 @@ function renderTareas(){
   populateProjectFilter();
   const list=sortTasks(filteredTasks());
   document.getElementById('task-count').textContent=`${list.length} tarea(s)`;
-  ['id','proyecto','persona','prioridad','estado','fecha','dias'].forEach(k=>{const el=document.getElementById('sort-'+k);if(el)el.textContent=sortCol===k?(sortDir===1?'↑':'↓'):''});
+  ['proyecto','persona','prioridad','estado','fecha','dias'].forEach(k=>{const el=document.getElementById('sort-'+k);if(el)el.textContent=sortCol===k?(sortDir===1?'↑':'↓'):''});
   const tbody=document.getElementById('tbody');
   if(!list.length){tbody.innerHTML=`<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">🔍</div>No hay tareas que coincidan</div></td></tr>`;return}
   tbody.innerHTML=list.map(t=>{
@@ -865,7 +868,7 @@ function openEdit(taskId){
 async function saveTask(){
   const descripcion=document.getElementById('f-desc').value.trim(),proj=document.getElementById('f-proyecto').value;
   if(!descripcion){showToast('La descripción es obligatoria','error');return}
-  const tarea={id:editingTaskId||nextTaskId(),proyecto:proj,categoria:document.getElementById('f-categoria').value,descripcion,prioridad:document.getElementById('f-prioridad').value,estado:document.getElementById('f-estado').value,fecha:document.getElementById('f-fecha').value||null,persona:document.getElementById('f-persona').value,notas:document.getElementById('f-notas').value.trim(),updated_at:new Date().toISOString()};
+  const tarea={id:editingTaskId||generateTaskId(),proyecto:proj,categoria:document.getElementById('f-categoria').value,descripcion,prioridad:document.getElementById('f-prioridad').value,estado:document.getElementById('f-estado').value,fecha:document.getElementById('f-fecha').value||null,persona:document.getElementById('f-persona').value,notas:document.getElementById('f-notas').value.trim(),updated_at:new Date().toISOString()};
   setSyncStatus('syncing');
   try{
     const{error}=editingTaskId?await sb.from('tareas').update(tarea).eq('id',editingTaskId):await sb.from('tareas').insert(tarea);
@@ -899,7 +902,7 @@ function openDetail(taskId){
   const t=tasks.find(x=>x.id===taskId);if(!t)return;
   detailTaskId=taskId;
   const d=diasRestantes(t.fecha),al=alerta(t),estCls=t.estado.toLowerCase().replace(' ','-').replace('ó','o'),prioCls=(t.prioridad||'').toLowerCase();
-  document.getElementById('detail-title').innerHTML=`<span class="cod-tag">${t.id}</span> &nbsp;${t.descripcion}`;
+  document.getElementById('detail-title').textContent = t.descripcion;
   document.getElementById('detail-body').innerHTML=`<div class="detail-grid"><div class="detail-item"><div class="detail-label">Proyecto</div><div class="detail-value">${t.proyecto}</div></div><div class="detail-item"><div class="detail-label">Categoría</div><div class="detail-value">${t.categoria||'—'}</div></div><div class="detail-item"><div class="detail-label">Persona</div><div class="detail-value">${personaChip(t.persona)}</div></div><div class="detail-item"><div class="detail-label">Estado</div><div class="detail-value"><span class="badge ${estCls}">${t.estado}</span></div></div><div class="detail-item"><div class="detail-label">Prioridad</div><div class="detail-value"><span class="badge ${prioCls}">${t.prioridad}</span></div></div><div class="detail-item"><div class="detail-label">Alerta</div><div class="detail-value">${al.txt}</div></div><div class="detail-item"><div class="detail-label">Fecha límite</div><div class="detail-value">${fmtFecha(t.fecha)}</div></div><div class="detail-item"><div class="detail-label">Días restantes</div><div class="detail-value" style="font-family:'JetBrains Mono',monospace">${d===null?'—':d===0?'Hoy':d<0?`${d} (vencida)`:'+'+d+' días'}</div></div><div class="detail-item"><div class="detail-label">Creada el</div><div class="detail-value">${t.created_at?fmtFechaCorta(t.created_at):'—'}</div></div></div>${t.notas?`<div class="detail-label" style="margin-bottom:6px">Notas</div><div class="detail-notes">${t.notas}</div>`:''}`;
   document.getElementById('overlay-detail').classList.add('open');
   loadComments(taskId);
