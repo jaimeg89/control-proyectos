@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>controlproyectos-jaime</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
   :root{
@@ -621,39 +621,36 @@ function setSyncStatus(s){
 // ── Load ──────────────────────────────────────────────────────
 async function loadAll(){
   try{
-    const[{data:p,error:pe},{data:t,error:te},{data:pe2,error:pee}]=await Promise.all([
-      sb.from('proyectos').select('*').order('id'),
-      sb.from('tareas').select('*').order('id'),
-      sb.from('personas').select('*').order('id')
+    // Load all tables in parallel, personas failure is non-fatal
+    const[{data:p,error:pe},{data:t,error:te}]=await Promise.all([
+      sb.from('proyectos').select('*').order('nombre'),
+      sb.from('tareas').select('*').order('created_at',{ascending:false})
     ]);
-    if(pe||te)throw pe||te;
-    projects=p||[];
-    tasks=t||[];
-    // If personas table doesn't exist yet, fall back to deriving from projects
-    personas=(!pee&&pe2&&pe2.length)?pe2:derivePersonas();
+    if(pe) throw pe;
+    if(te) throw te;
+    projects = p||[];
+    tasks    = t||[];
+    // Try personas table - non-fatal if missing
+    try{
+      const{data:pe2}=await sb.from('personas').select('*').order('id');
+      personas = (pe2&&pe2.length) ? pe2 : derivePersonas();
+    }catch(_){ personas=derivePersonas(); }
     setSyncStatus('ok');
     document.getElementById('dash-loading').style.display='none';
     document.getElementById('dash-content').style.display='block';
     renderUserSwitcher();
-    renderAll();
-  }catch(e){
-    // Try without personas table
-    try{
-      const[{data:p,error:pe},{data:t,error:te}]=await Promise.all([
-        sb.from('proyectos').select('*').order('id'),
-        sb.from('tareas').select('*').order('id')
-      ]);
-      if(pe||te)throw pe||te;
-      projects=p||[];tasks=t||[];
-      personas=derivePersonas();
-      setSyncStatus('ok');
-      document.getElementById('dash-loading').style.display='none';
-      document.getElementById('dash-content').style.display='block';
-      renderUserSwitcher();renderAll();
-    }catch(e2){
-      setSyncStatus('error');
-      document.getElementById('dash-loading').innerHTML='<div style="text-align:center;color:var(--vencida)">⚠️ Error al conectar.<br><small style="color:var(--muted)">Verifica que ejecutaste el SQL en Supabase.</small></div>';
+    try{ renderAll(); }catch(re){
+      console.error('renderAll error:',re);
+      document.getElementById('dash-content').innerHTML='<div style="padding:24px;color:#dc2626">Error al renderizar: '+re.message+'</div>';
     }
+  }catch(e){
+    console.error('loadAll error:',e);
+    setSyncStatus('error');
+    document.getElementById('dash-loading').innerHTML=`<div style="text-align:center;padding:24px">
+      <div style="color:#dc2626;font-size:16px;margin-bottom:8px">⚠️ Error al conectar</div>
+      <div style="color:#5a7a94;font-size:13px">${e.message||'Sin detalles'}</div>
+      <button onclick="loadAll()" style="margin-top:16px;padding:8px 16px;background:#3b82f6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px">Reintentar</button>
+    </div>`;
   }
 }
 
