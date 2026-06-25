@@ -292,6 +292,25 @@
   .comments-empty{text-align:center;padding:20px;color:var(--dim);font-size:13px}
   .modal.modal-wide{max-width:680px}
 
+
+  /* ── COMPLETED SECTION ── */
+  .completed-section{margin-top:28px}
+  .completed-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 16px;
+    background:#f0fdf4;border:1px solid #bbf7d0;
+    border-radius:var(--radius) var(--radius) 0 0;
+    cursor:default;
+  }
+  .completed-header-left{display:flex;align-items:center;gap:10px}
+  .completed-header-title{font-size:13px;font-weight:600;color:#15803d}
+  .completed-header-count{font-size:11px;color:#16a34a;background:#dcfce7;padding:2px 8px;border-radius:10px;font-weight:600}
+  .completed-table-wrap{border:1px solid #bbf7d0;border-top:none;border-radius:0 0 var(--radius) var(--radius);overflow:auto;background:#fff}
+  .completed-table-wrap table{min-width:600px}
+  .completed-table-wrap thead th{background:#f0fdf4;color:#15803d;border-bottom:1px solid #bbf7d0}
+  .completed-table-wrap tbody tr{opacity:.75}
+  .completed-table-wrap tbody tr:hover{background:#f0fdf4;opacity:1}
+
   /* ── LOGIN ── */
   .login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;padding:24px}
   .login-card{background:#ffffff;border:1px solid var(--border);border-radius:var(--radius);padding:36px 32px;width:100%;max-width:360px;box-shadow:0 4px 24px rgba(0,0,0,.10)}
@@ -364,9 +383,31 @@
     <button class="login-btn" onclick="doLogin()">Ingresar</button>
     <div class="login-error" id="login-error"></div>
   </div>
-</div>
+    <!-- COMPLETED TABLE -->
+    <div class="completed-section" id="completed-section" style="display:none">
+      <div class="completed-header">
+        <div class="completed-header-left">
+          <span style="font-size:16px">✅</span>
+          <span class="completed-header-title">Tareas completadas</span>
+          <span class="completed-header-count" id="completed-count">0</span>
+        </div>
+      </div>
+      <div class="completed-table-wrap">
+        <table>
+          <thead><tr>
+            <th>Proyecto</th>
+            <th>Descripción</th>
+            <th>Persona</th>
+            <th>Prioridad</th>
+            <th>Fecha límite</th>
+            <th>Completada</th>
+          </tr></thead>
+          <tbody id="tbody-completed"></tbody>
+        </table>
+      </div>
+    </div>
 
-
+  
 <div class="topbar">
   <div class="topbar-left">
     <div class="logo">CP<span>.</span>ARQ</div>
@@ -382,17 +423,61 @@
     <div class="divider-v"></div>
     <button class="btn btn-primary" onclick="openNewTask()">＋ Nueva tarea</button>
   </div>
-</div>
+    <!-- COMPLETED TABLE -->
+    <div class="completed-section" id="completed-section" style="display:none">
+      <div class="completed-header">
+        <div class="completed-header-left">
+          <span style="font-size:16px">✅</span>
+          <span class="completed-header-title">Tareas completadas</span>
+          <span class="completed-header-count" id="completed-count">0</span>
+        </div>
+      </div>
+      <div class="completed-table-wrap">
+        <table>
+          <thead><tr>
+            <th>Proyecto</th>
+            <th>Descripción</th>
+            <th>Persona</th>
+            <th>Prioridad</th>
+            <th>Fecha límite</th>
+            <th>Completada</th>
+          </tr></thead>
+          <tbody id="tbody-completed"></tbody>
+        </table>
+      </div>
+    </div>
 
-<div class="nav">
+  <div class="nav">
   <button class="nav-tab active" onclick="showTab('dashboard')">Dashboard</button>
   <button class="nav-tab" onclick="showTab('tareas')">Tareas</button>
   <button class="nav-tab" onclick="showTab('proyectos')">Proyectos</button>
   <button class="nav-tab" id="tab-personas" onclick="showTab('personas')">Personas</button>
   <button class="nav-tab admin-only-tab" id="tab-eliminadas" onclick="showTab('eliminadas')" style="display:none">🗑 Eliminadas</button>
-</div>
+    <!-- COMPLETED TABLE -->
+    <div class="completed-section" id="completed-section" style="display:none">
+      <div class="completed-header">
+        <div class="completed-header-left">
+          <span style="font-size:16px">✅</span>
+          <span class="completed-header-title">Tareas completadas</span>
+          <span class="completed-header-count" id="completed-count">0</span>
+        </div>
+      </div>
+      <div class="completed-table-wrap">
+        <table>
+          <thead><tr>
+            <th>Proyecto</th>
+            <th>Descripción</th>
+            <th>Persona</th>
+            <th>Prioridad</th>
+            <th>Fecha límite</th>
+            <th>Completada</th>
+          </tr></thead>
+          <tbody id="tbody-completed"></tbody>
+        </table>
+      </div>
+    </div>
 
-<div class="main">
+  <div class="main">
 
   <!-- DASHBOARD -->
   <div class="section active" id="sec-dashboard">
@@ -406,9 +491,31 @@
         <div class="card"><div class="card-header">Estado general</div><div class="card-body" id="dash-estado"></div></div>
       </div>
     </div>
-  </div>
+      <!-- COMPLETED TABLE -->
+    <div class="completed-section" id="completed-section" style="display:none">
+      <div class="completed-header">
+        <div class="completed-header-left">
+          <span style="font-size:16px">✅</span>
+          <span class="completed-header-title">Tareas completadas</span>
+          <span class="completed-header-count" id="completed-count">0</span>
+        </div>
+      </div>
+      <div class="completed-table-wrap">
+        <table>
+          <thead><tr>
+            <th>Proyecto</th>
+            <th>Descripción</th>
+            <th>Persona</th>
+            <th>Prioridad</th>
+            <th>Fecha límite</th>
+            <th>Completada</th>
+          </tr></thead>
+          <tbody id="tbody-completed"></tbody>
+        </table>
+      </div>
+    </div>
 
-  <!-- TAREAS -->
+    <!-- TAREAS -->
   <div class="section" id="sec-tareas">
     <div class="filter-bar">
       <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" id="search-input" placeholder="Buscar descripción, proyecto, notas…" oninput="renderTareas()"></div>
@@ -431,27 +538,93 @@
       </tr></thead>
       <tbody id="tbody"></tbody>
     </table></div>
-  </div>
+      <!-- COMPLETED TABLE -->
+    <div class="completed-section" id="completed-section" style="display:none">
+      <div class="completed-header">
+        <div class="completed-header-left">
+          <span style="font-size:16px">✅</span>
+          <span class="completed-header-title">Tareas completadas</span>
+          <span class="completed-header-count" id="completed-count">0</span>
+        </div>
+      </div>
+      <div class="completed-table-wrap">
+        <table>
+          <thead><tr>
+            <th>Proyecto</th>
+            <th>Descripción</th>
+            <th>Persona</th>
+            <th>Prioridad</th>
+            <th>Fecha límite</th>
+            <th>Completada</th>
+          </tr></thead>
+          <tbody id="tbody-completed"></tbody>
+        </table>
+      </div>
+    </div>
 
-  <!-- PROYECTOS -->
+    <!-- PROYECTOS -->
   <div class="section" id="sec-proyectos">
     <div class="section-header">
       <span class="section-title">Proyectos</span>
       <button class="btn btn-primary proj-admin-only" onclick="openNewProject()">＋ Nuevo proyecto</button>
     </div>
     <div class="proj-grid" id="proj-grid"></div>
-  </div>
+      <!-- COMPLETED TABLE -->
+    <div class="completed-section" id="completed-section" style="display:none">
+      <div class="completed-header">
+        <div class="completed-header-left">
+          <span style="font-size:16px">✅</span>
+          <span class="completed-header-title">Tareas completadas</span>
+          <span class="completed-header-count" id="completed-count">0</span>
+        </div>
+      </div>
+      <div class="completed-table-wrap">
+        <table>
+          <thead><tr>
+            <th>Proyecto</th>
+            <th>Descripción</th>
+            <th>Persona</th>
+            <th>Prioridad</th>
+            <th>Fecha límite</th>
+            <th>Completada</th>
+          </tr></thead>
+          <tbody id="tbody-completed"></tbody>
+        </table>
+      </div>
+    </div>
 
-  <!-- PERSONAS -->
+    <!-- PERSONAS -->
   <div class="section" id="sec-personas">
     <div class="section-header">
       <span class="section-title">Personas del equipo</span>
       <button class="btn btn-primary" onclick="openNewPersona()">＋ Nueva persona</button>
     </div>
     <div class="personas-grid" id="personas-grid"></div>
-  </div>
+      <!-- COMPLETED TABLE -->
+    <div class="completed-section" id="completed-section" style="display:none">
+      <div class="completed-header">
+        <div class="completed-header-left">
+          <span style="font-size:16px">✅</span>
+          <span class="completed-header-title">Tareas completadas</span>
+          <span class="completed-header-count" id="completed-count">0</span>
+        </div>
+      </div>
+      <div class="completed-table-wrap">
+        <table>
+          <thead><tr>
+            <th>Proyecto</th>
+            <th>Descripción</th>
+            <th>Persona</th>
+            <th>Prioridad</th>
+            <th>Fecha límite</th>
+            <th>Completada</th>
+          </tr></thead>
+          <tbody id="tbody-completed"></tbody>
+        </table>
+      </div>
+    </div>
 
-  <!-- ELIMINADAS -->
+    <!-- ELIMINADAS -->
   <div class="section" id="sec-eliminadas">
     <div class="section-header">
       <span class="section-title">Tareas eliminadas</span>
@@ -469,9 +642,31 @@
       </tr></thead>
       <tbody id="tbody-eliminadas"></tbody>
     </table></div>
-  </div>
+      <!-- COMPLETED TABLE -->
+    <div class="completed-section" id="completed-section" style="display:none">
+      <div class="completed-header">
+        <div class="completed-header-left">
+          <span style="font-size:16px">✅</span>
+          <span class="completed-header-title">Tareas completadas</span>
+          <span class="completed-header-count" id="completed-count">0</span>
+        </div>
+      </div>
+      <div class="completed-table-wrap">
+        <table>
+          <thead><tr>
+            <th>Proyecto</th>
+            <th>Descripción</th>
+            <th>Persona</th>
+            <th>Prioridad</th>
+            <th>Fecha límite</th>
+            <th>Completada</th>
+          </tr></thead>
+          <tbody id="tbody-completed"></tbody>
+        </table>
+      </div>
+    </div>
 
-</div><!-- /main -->
+  </div><!-- /main -->
 
 <!-- MODAL TAREA -->
 <div class="overlay" id="overlay-task">
@@ -521,9 +716,31 @@
       <button class="btn btn-primary" onclick="saveTask()">Guardar tarea</button>
     </div>
   </div>
-</div>
+    <!-- COMPLETED TABLE -->
+    <div class="completed-section" id="completed-section" style="display:none">
+      <div class="completed-header">
+        <div class="completed-header-left">
+          <span style="font-size:16px">✅</span>
+          <span class="completed-header-title">Tareas completadas</span>
+          <span class="completed-header-count" id="completed-count">0</span>
+        </div>
+      </div>
+      <div class="completed-table-wrap">
+        <table>
+          <thead><tr>
+            <th>Proyecto</th>
+            <th>Descripción</th>
+            <th>Persona</th>
+            <th>Prioridad</th>
+            <th>Fecha límite</th>
+            <th>Completada</th>
+          </tr></thead>
+          <tbody id="tbody-completed"></tbody>
+        </table>
+      </div>
+    </div>
 
-<!-- MODAL DETALLE TAREA -->
+  <!-- MODAL DETALLE TAREA -->
 <div class="overlay" id="overlay-detail">
   <div class="modal modal-wide">
     <div class="modal-header"><span class="modal-title" id="detail-title"></span><button class="modal-close" onclick="closeModal('overlay-detail')">✕</button></div>
@@ -541,9 +758,31 @@
     </div>
     <div class="modal-footer"><button class="btn" onclick="closeModal('overlay-detail')">Cerrar</button><button class="btn btn-primary" id="btn-edit-detail" onclick="editFromDetail()">Editar</button></div>
   </div>
-</div>
+    <!-- COMPLETED TABLE -->
+    <div class="completed-section" id="completed-section" style="display:none">
+      <div class="completed-header">
+        <div class="completed-header-left">
+          <span style="font-size:16px">✅</span>
+          <span class="completed-header-title">Tareas completadas</span>
+          <span class="completed-header-count" id="completed-count">0</span>
+        </div>
+      </div>
+      <div class="completed-table-wrap">
+        <table>
+          <thead><tr>
+            <th>Proyecto</th>
+            <th>Descripción</th>
+            <th>Persona</th>
+            <th>Prioridad</th>
+            <th>Fecha límite</th>
+            <th>Completada</th>
+          </tr></thead>
+          <tbody id="tbody-completed"></tbody>
+        </table>
+      </div>
+    </div>
 
-<!-- MODAL PROYECTO -->
+  <!-- MODAL PROYECTO -->
 <div class="overlay" id="overlay-project">
   <div class="modal">
     <div class="modal-header"><span class="modal-title" id="modal-project-title">Nuevo proyecto</span><button class="modal-close" onclick="closeModal('overlay-project')">✕</button></div>
@@ -569,9 +808,31 @@
       <button class="btn btn-primary" onclick="saveProject()">Guardar proyecto</button>
     </div>
   </div>
-</div>
+    <!-- COMPLETED TABLE -->
+    <div class="completed-section" id="completed-section" style="display:none">
+      <div class="completed-header">
+        <div class="completed-header-left">
+          <span style="font-size:16px">✅</span>
+          <span class="completed-header-title">Tareas completadas</span>
+          <span class="completed-header-count" id="completed-count">0</span>
+        </div>
+      </div>
+      <div class="completed-table-wrap">
+        <table>
+          <thead><tr>
+            <th>Proyecto</th>
+            <th>Descripción</th>
+            <th>Persona</th>
+            <th>Prioridad</th>
+            <th>Fecha límite</th>
+            <th>Completada</th>
+          </tr></thead>
+          <tbody id="tbody-completed"></tbody>
+        </table>
+      </div>
+    </div>
 
-<!-- MODAL PERSONA -->
+  <!-- MODAL PERSONA -->
 <div class="overlay" id="overlay-persona">
   <div class="modal modal-sm">
     <div class="modal-header"><span class="modal-title" id="modal-persona-title">Nueva persona</span><button class="modal-close" onclick="closeModal('overlay-persona')">✕</button></div>
@@ -587,16 +848,82 @@
       <button class="btn btn-primary" onclick="savePersona()">Guardar</button>
     </div>
   </div>
-</div>
+    <!-- COMPLETED TABLE -->
+    <div class="completed-section" id="completed-section" style="display:none">
+      <div class="completed-header">
+        <div class="completed-header-left">
+          <span style="font-size:16px">✅</span>
+          <span class="completed-header-title">Tareas completadas</span>
+          <span class="completed-header-count" id="completed-count">0</span>
+        </div>
+      </div>
+      <div class="completed-table-wrap">
+        <table>
+          <thead><tr>
+            <th>Proyecto</th>
+            <th>Descripción</th>
+            <th>Persona</th>
+            <th>Prioridad</th>
+            <th>Fecha límite</th>
+            <th>Completada</th>
+          </tr></thead>
+          <tbody id="tbody-completed"></tbody>
+        </table>
+      </div>
+    </div>
 
-<div class="toast" id="toast"></div>
+  <div class="toast" id="toast">    <!-- COMPLETED TABLE -->
+    <div class="completed-section" id="completed-section" style="display:none">
+      <div class="completed-header">
+        <div class="completed-header-left">
+          <span style="font-size:16px">✅</span>
+          <span class="completed-header-title">Tareas completadas</span>
+          <span class="completed-header-count" id="completed-count">0</span>
+        </div>
+      </div>
+      <div class="completed-table-wrap">
+        <table>
+          <thead><tr>
+            <th>Proyecto</th>
+            <th>Descripción</th>
+            <th>Persona</th>
+            <th>Prioridad</th>
+            <th>Fecha límite</th>
+            <th>Completada</th>
+          </tr></thead>
+          <tbody id="tbody-completed"></tbody>
+        </table>
+      </div>
+    </div>
 
-<!-- QUICK EDIT DROPDOWN -->
+  <!-- QUICK EDIT DROPDOWN -->
 <div class="qe-menu" id="qe-menu">
   <div id="qe-items"></div>
-</div>
+    <!-- COMPLETED TABLE -->
+    <div class="completed-section" id="completed-section" style="display:none">
+      <div class="completed-header">
+        <div class="completed-header-left">
+          <span style="font-size:16px">✅</span>
+          <span class="completed-header-title">Tareas completadas</span>
+          <span class="completed-header-count" id="completed-count">0</span>
+        </div>
+      </div>
+      <div class="completed-table-wrap">
+        <table>
+          <thead><tr>
+            <th>Proyecto</th>
+            <th>Descripción</th>
+            <th>Persona</th>
+            <th>Prioridad</th>
+            <th>Fecha límite</th>
+            <th>Completada</th>
+          </tr></thead>
+          <tbody id="tbody-completed"></tbody>
+        </table>
+      </div>
+    </div>
 
-<script>
+  <script>
 const SUPABASE_URL='https://zoadqzcsucthllmujkxs.supabase.co';
 const SUPABASE_KEY='sb_publishable_E7FlO7wVKzB7OL7ngLNuoQ_iDpCuDUI';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
@@ -758,15 +1085,46 @@ function renderDashboard(){
 // ── Tareas ────────────────────────────────────────────────────
 function renderTareas(){
   populateProjectFilter();
-  const list=sortTasks(filteredTasks());
-  document.getElementById('task-count').textContent=`${list.length} tarea(s)`;
+  const allFiltered = sortTasks(filteredTasks());
+  // Split active vs completed
+  const active    = allFiltered.filter(t => t.estado !== 'Completada');
+  const completed = allFiltered.filter(t => t.estado === 'Completada');
+
+  document.getElementById('task-count').textContent=`${active.length} tarea(s) activa(s)`;
   ['proyecto','persona','prioridad','estado','fecha','dias'].forEach(k=>{const el=document.getElementById('sort-'+k);if(el)el.textContent=sortCol===k?(sortDir===1?'↑':'↓'):''});
+
+  // ── Active tasks table ──────────────────────────────────────
   const tbody=document.getElementById('tbody');
-  if(!list.length){tbody.innerHTML=`<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">🔍</div>No hay tareas que coincidan</div></td></tr>`;return}
-  tbody.innerHTML=list.map(t=>{
-    const d=diasRestantes(t.fecha),al=alerta(t),rowCls=t.estado==='Completada'?'row-completada':(d!==null&&d<0?'row-vencida':''),diasStr=d===null?'—':d===0?'Hoy':d<0?`${d}d`:`+${d}d`,diasCls=d===null?'':d<0?'neg':d<=7?'warn':'',estCls=t.estado.toLowerCase().replace(' ','-').replace('ó','o'),prioCls=(t.prioridad||'').toLowerCase();
-    return`<tr class="${rowCls}" onclick="openDetail('${t.id}')"><td><div class="proj-tag">${t.proyecto}</div><div class="cod-tag">${t.categoria}</div></td><td><div class="task-desc"><div class="task-desc-main">${t.descripcion}</div>${t.notas?`<div class="task-desc-sub">${t.notas}</div>`:''}</div></td><td>${personaChip(t.persona)}</td><td onclick="event.stopPropagation();if(!checkRestricted())openQE(event,'prioridad','${t.id}')"><span class="badge ${prioCls}" title="${checkRestricted()?'':'Click para cambiar'}">${t.prioridad}${checkRestricted()?'':' ▾'}</span></td><td onclick="event.stopPropagation();if(!checkRestricted())openQE(event,'estado','${t.id}')"><span class="badge ${estCls}" title="${checkRestricted()?'':'Click para cambiar'}">${t.estado}${checkRestricted()?'':' ▾'}</span></td><td><span class="fecha-cell">${fmtFecha(t.fecha)}</span></td><td><span class="dias-cell ${diasCls}">${diasStr}</span></td><td>${al.txt}</td><td><span class="fecha-cell" style="font-size:11px;color:var(--dim)">${t.created_at?fmtFechaCorta(t.created_at):'—'}</span></td></tr>`;
-  }).join('');
+  if(!active.length){
+    tbody.innerHTML=`<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">${completed.length?'✅':'🔍'}</div>${completed.length?'Todas las tareas están completadas':'No hay tareas que coincidan'}</div></td></tr>`;
+  } else {
+    tbody.innerHTML=active.map(t=>{
+      const d=diasRestantes(t.fecha),al=alerta(t),rowCls=d!==null&&d<0?'row-vencida':'',diasStr=d===null?'—':d===0?'Hoy':d<0?`${d}d`:`+${d}d`,diasCls=d===null?'':d<0?'neg':d<=7?'warn':'',estCls=t.estado.toLowerCase().replace(' ','-').replace('ó','o'),prioCls=(t.prioridad||'').toLowerCase();
+      return`<tr class="${rowCls}" onclick="openDetail('${t.id}')"><td><div class="proj-tag">${t.proyecto}</div><div class="cod-tag">${t.categoria}</div></td><td><div class="task-desc"><div class="task-desc-main">${t.descripcion}</div>${t.notas?`<div class="task-desc-sub">${t.notas}</div>`:''}</div></td><td>${personaChip(t.persona)}</td><td onclick="event.stopPropagation();if(!checkRestricted())openQE(event,'prioridad','${t.id}')"><span class="badge ${prioCls}" title="${checkRestricted()?'':'Click para cambiar'}">${t.prioridad}${checkRestricted()?'':' ▾'}</span></td><td onclick="event.stopPropagation();if(!checkRestricted())openQE(event,'estado','${t.id}')"><span class="badge ${estCls}" title="${checkRestricted()?'':'Click para cambiar'}">${t.estado}${checkRestricted()?'':' ▾'}</span></td><td><span class="fecha-cell">${fmtFecha(t.fecha)}</span></td><td><span class="dias-cell ${diasCls}">${diasStr}</span></td><td>${al.txt}</td><td><span class="fecha-cell" style="font-size:11px;color:var(--dim)">${t.created_at?fmtFechaCorta(t.created_at):'—'}</span></td></tr>`;
+    }).join('');
+  }
+
+  // ── Completed tasks table ───────────────────────────────────
+  const secComp  = document.getElementById('completed-section');
+  const tbodyComp = document.getElementById('tbody-completed');
+  const countComp = document.getElementById('completed-count');
+  if(completed.length){
+    secComp.style.display = '';
+    countComp.textContent = completed.length;
+    tbodyComp.innerHTML = completed.map(t=>{
+      const prioCls=(t.prioridad||'').toLowerCase();
+      return`<tr onclick="openDetail('${t.id}')">
+        <td><div class="proj-tag">${t.proyecto}</div><div class="cod-tag">${t.categoria}</div></td>
+        <td><div class="task-desc-main" style="text-decoration:line-through;color:var(--muted)">${t.descripcion}</div></td>
+        <td>${personaChip(t.persona)}</td>
+        <td><span class="badge ${prioCls}">${t.prioridad}</span></td>
+        <td><span class="fecha-cell">${fmtFecha(t.fecha)}</span></td>
+        <td><span class="fecha-cell" style="font-size:11px;color:#15803d">${t.updated_at?fmtFechaCorta(t.updated_at):'—'}</span></td>
+      </tr>`;
+    }).join('');
+  } else {
+    secComp.style.display = 'none';
+  }
 }
 function sortBy(col){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1}renderTareas()}
 
