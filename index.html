@@ -304,6 +304,52 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
   .ov{align-items:flex-end;padding:0}
   .modal{max-width:100%;border-radius:var(--r) var(--r) 0 0;max-height:95vh}
 }
+
+/* ── REUNIONES ── */
+.reu-layout{display:grid;grid-template-columns:240px 1fr;gap:16px;height:calc(100vh - 180px);min-height:500px}
+.reu-sidebar{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+.reu-sidebar-hdr{padding:12px 14px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:flex;align-items:center;justify-content:space-between}
+.reu-proj-list{overflow-y:auto;flex:1}
+.reu-proj-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.reu-proj-item:last-child{border-bottom:none}
+.reu-proj-item:hover{background:var(--surface)}
+.reu-proj-item.sel{background:var(--accent-bg);border-left:3px solid var(--accent)}
+.reu-proj-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.reu-proj-count{font-size:11px;color:var(--muted);background:var(--surface);padding:1px 6px;border-radius:10px;flex-shrink:0}
+.reu-proj-item.sel .reu-proj-count{background:#fff}
+.reu-main{display:flex;flex-direction:column;overflow:hidden}
+.reu-main-hdr{background:var(--card);border:1px solid var(--border);border-radius:var(--r) var(--r) 0 0;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--border)}
+.reu-main-title{font-size:15px;font-weight:700;flex-shrink:0}
+.reu-search-wrap{position:relative;flex:1;max-width:280px}
+.reu-search-wrap input{width:100%;padding:7px 12px 7px 30px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);outline:none;font-size:13px}
+.reu-search-wrap input:focus{border-color:var(--accent)}
+.reu-search-ic{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--dim);font-size:13px;pointer-events:none}
+.reu-entries{flex:1;overflow-y:auto;background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r) var(--r);box-shadow:var(--shadow)}
+.reu-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;color:var(--muted)}
+.reu-empty-ic{font-size:32px;margin-bottom:8px}
+.reu-entry{border-bottom:1px solid var(--border);padding:18px 20px}
+.reu-entry:last-child{border-bottom:none}
+.reu-entry-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.reu-entry-date{font-size:13px;font-weight:700;color:var(--text)}
+.reu-entry-proj{font-size:11px;color:var(--muted);margin-top:3px}
+.reu-entry-body{font-size:13px;line-height:1.6;color:var(--text);white-space:pre-wrap;margin-bottom:12px}
+.reu-acuerdos{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px}
+.reu-acuerdos-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px}
+.reu-acuerdo-item{display:flex;align-items:flex-start;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)}
+.reu-acuerdo-item:last-child{border-bottom:none}
+.reu-acuerdo-txt{flex:1;font-size:13px;line-height:1.4}
+.reu-acuerdo-tag{font-size:10px;padding:2px 8px;border-radius:10px;background:var(--green-bg);color:var(--green);font-weight:600;white-space:nowrap;flex-shrink:0;cursor:pointer;transition:all .15s;border:none}
+.reu-acuerdo-tag:hover{background:var(--green);color:#fff}
+.reu-acuerdo-tag.linked{background:var(--accent-bg);color:var(--accent);cursor:default}
+.acuerdo-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.acuerdo-row input{flex:1;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);outline:none;font-size:13px}
+.acuerdo-row input:focus{border-color:var(--accent)}
+.acuerdo-del{background:transparent;border:none;color:var(--dim);font-size:18px;cursor:pointer;padding:2px 4px;line-height:1;flex-shrink:0}
+.acuerdo-del:hover{color:var(--red)}
+.add-acuerdo-btn{font-size:12px;color:var(--accent);background:transparent;border:1px dashed var(--accent);border-radius:var(--r-sm);padding:6px 12px;cursor:pointer;width:100%;text-align:center;margin-top:4px;transition:background .15s}
+.add-acuerdo-btn:hover{background:var(--accent-bg)}
+@media(max-width:768px){.reu-layout{grid-template-columns:1fr;height:auto}.reu-sidebar{max-height:200px}.reu-entries{max-height:400px}}
+
 </style>
 </head>
 <body>
@@ -346,6 +392,7 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
     <button class="nav-btn"     data-tab="proyectos"  onclick="showTab('proyectos')">Proyectos</button>
     <button class="nav-btn"     data-tab="personas"   onclick="showTab('personas')"   id="tab-personas">Personas</button>
     <button class="nav-btn"     data-tab="eliminadas" onclick="showTab('eliminadas')" id="tab-elim" style="display:none">🗑 Eliminadas</button>
+    <button class="nav-btn" data-tab="reuniones" onclick="showTab('reuniones')" id="tab-reuniones" style="display:none">📓 Reuniones</button>
   </nav>
 
   <div class="main">
@@ -419,6 +466,34 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
         <button class="btn btn-p" onclick="openNewPers()">＋ Nueva persona</button>
       </div>
       <div class="pegrid" id="pegrid"></div>
+    </div>
+
+    <!-- REUNIONES -->
+    <div class="sec" id="sec-reuniones">
+      <div class="reu-layout">
+        <!-- SIDEBAR: proyecto list -->
+        <div class="reu-sidebar">
+          <div class="reu-sidebar-hdr">
+            <span>Proyectos</span>
+            <span id="reu-total-count" style="font-size:11px;color:var(--muted)"></span>
+          </div>
+          <div class="reu-proj-list" id="reu-proj-list"></div>
+        </div>
+        <!-- MAIN: entries -->
+        <div class="reu-main">
+          <div class="reu-main-hdr">
+            <span class="reu-main-title" id="reu-main-title">Selecciona un proyecto</span>
+            <div class="reu-search-wrap">
+              <span class="reu-search-ic">🔍</span>
+              <input id="reu-search" type="text" placeholder="Buscar en apuntes…" oninput="renderReuEntries()">
+            </div>
+            <button class="btn btn-p btn-sm" id="reu-new-btn" onclick="openNewReu()" style="display:none">＋ Nueva entrada</button>
+          </div>
+          <div class="reu-entries" id="reu-entries">
+            <div class="reu-empty"><div class="reu-empty-ic">📓</div><span>Selecciona un proyecto para ver sus apuntes</span></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ELIMINADAS -->
@@ -526,6 +601,49 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
       <button class="btn" onclick="closeOv('ov-pers')">Cancelar</button>
       <button class="btn btn-p" onclick="savePers()">Guardar</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL REUNION -->
+<div class="ov" id="ov-reu">
+  <div class="modal wide">
+    <div class="mhdr"><span class="mtitle" id="reu-modal-title">Nueva entrada</span><button class="mclose" onclick="closeOv('ov-reu')">✕</button></div>
+    <div class="mbody">
+      <div class="fgr">
+        <div class="fg"><label>Proyecto *</label><select id="reu-proj-sel"></select></div>
+        <div class="fg"><label>Fecha y hora *</label><input id="reu-fecha" type="datetime-local"></div>
+      </div>
+      <div class="fgr one">
+        <div class="fg"><label>Apuntes / Notas</label><textarea id="reu-notas" placeholder="Escribe los apuntes de la reunión…" style="min-height:140px"></textarea></div>
+      </div>
+      <div class="fgr one">
+        <div class="fg">
+          <label>Acuerdos / Compromisos</label>
+          <div id="acuerdos-list"></div>
+          <button class="add-acuerdo-btn" onclick="addAcuerdo()">＋ Agregar acuerdo</button>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-d" id="btn-del-reu" onclick="deleteReu()" style="display:none">Eliminar entrada</button>
+      <button class="btn" onclick="closeOv('ov-reu')">Cancelar</button>
+      <button class="btn btn-p" onclick="saveReu()">Guardar entrada</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VINCULAR TAREA -->
+<div class="ov" id="ov-link-task">
+  <div class="modal sm">
+    <div class="mhdr"><span class="mtitle">Vincular a tarea</span><button class="mclose" onclick="closeOv('ov-link-task')">✕</button></div>
+    <div class="mbody">
+      <div class="fg" style="margin-bottom:14px">
+        <label>Buscar tarea</label>
+        <input id="link-search" type="text" placeholder="Escribe para buscar…" oninput="renderLinkList()">
+      </div>
+      <div id="link-task-list" style="max-height:280px;overflow-y:auto"></div>
+    </div>
+    <div class="mfoot"><button class="btn" onclick="closeOv('ov-link-task')">Cancelar</button></div>
   </div>
 </div>
 
@@ -686,6 +804,7 @@ function applyPermissions() {
 
   // Eliminadas tab: admin only
   el('tab-elim').style.display = admin ? '' : 'none';
+  el('tab-reuniones').style.display = admin ? '' : 'none';
 
   // Personas tab: only for admin and only in "todos" view
   el('tab-personas').style.display = (admin && S.activeUser === 'todos') ? '' : 'none';
@@ -1294,7 +1413,266 @@ function renderAll(){
   if(S.activeTab==='proyectos')  renderProyectos();
   if(S.activeTab==='personas')   renderPersonas();
   if(S.activeTab==='eliminadas') renderEliminadas();
+  if(S.activeTab==='reuniones')   renderReuniones();
   applyPermissions();
+}
+
+
+/* ── REUNIONES ─────────────────────────────────────────────── */
+let reuData       = [];   // all reunion entries from Supabase
+let reuSelProj    = null; // currently selected project name
+let reuEditId     = null; // editing entry id
+let reuLinkIdx    = null; // which acuerdo we're linking
+let reuLinkEntryId = null;
+
+async function loadReuniones() {
+  try {
+    const { data, error } = await db.from('reuniones').select('*').order('fecha', { ascending: false });
+    if (error) throw error;
+    reuData = data || [];
+  } catch(e) {
+    reuData = [];
+  }
+}
+
+function renderReuSidebar() {
+  // Group by project
+  const counts = {};
+  reuData.forEach(r => { counts[r.proyecto] = (counts[r.proyecto]||0)+1; });
+  // Show all projects, even those with 0 entries
+  const projs = S.projects.map(p => p.nombre);
+  // Add any projects from entries that might not be in projects list
+  reuData.forEach(r => { if (!projs.includes(r.proyecto)) projs.push(r.proyecto); });
+  const unique = [...new Set(projs)].sort();
+  el('reu-total-count').textContent = `${reuData.length} entrada(s)`;
+  el('reu-proj-list').innerHTML = unique.map(p => {
+    const cnt = counts[p]||0;
+    const sel = reuSelProj === p;
+    return `<div class="reu-proj-item${sel?' sel':''}" onclick="selectReuProj('${p.replace(/'/g,"\'")}')">
+      <span class="reu-proj-name">${esc(p)}</span>
+      <span class="reu-proj-count">${cnt}</span>
+    </div>`;
+  }).join('');
+}
+
+function selectReuProj(projName) {
+  reuSelProj = projName;
+  el('reu-main-title').textContent = projName;
+  el('reu-new-btn').style.display = '';
+  renderReuSidebar();
+  renderReuEntries();
+}
+
+function renderReuEntries() {
+  if (!reuSelProj) return;
+  const search = (el('reu-search')?.value||'').toLowerCase();
+  let entries = reuData.filter(r => r.proyecto === reuSelProj);
+  if (search) {
+    entries = entries.filter(r =>
+      (r.notas||'').toLowerCase().includes(search) ||
+      (r.acuerdos||[]).some(a => (a.texto||'').toLowerCase().includes(search))
+    );
+  }
+  const container = el('reu-entries');
+  if (!entries.length) {
+    container.innerHTML = `<div class="reu-empty"><div class="reu-empty-ic">${search?'🔍':'📝'}</div><span>${search?'Sin resultados':'Sin entradas aún. Crea una nueva.'}</span></div>`;
+    return;
+  }
+  container.innerHTML = entries.map(r => {
+    const fecha = r.fecha ? new Date(r.fecha).toLocaleString('es-EC', {
+      day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'
+    }) : '—';
+    const acuerdos = r.acuerdos||[];
+    const acuerdosHtml = acuerdos.length ? `
+      <div class="reu-acuerdos">
+        <div class="reu-acuerdos-title">📋 Acuerdos y compromisos (${acuerdos.length})</div>
+        ${acuerdos.map((a,i) => {
+          const linkedTask = a.tarea_id ? S.tasks.find(t=>t.id===a.tarea_id) : null;
+          const tagHtml = linkedTask
+            ? `<span class="reu-acuerdo-tag linked" title="Tarea: ${esc(linkedTask.descripcion)}">✅ Vinculada</span>`
+            : `<span class="reu-acuerdo-tag" onclick="openLinkTask('${r.id}',${i})" title="Vincular a tarea">🔗 Vincular</span>`;
+          return `<div class="reu-acuerdo-item">
+            <span class="reu-acuerdo-txt">${esc(a.texto)}</span>
+            ${tagHtml}
+          </div>`;
+        }).join('')}
+      </div>` : '';
+    return `<div class="reu-entry">
+      <div class="reu-entry-hdr">
+        <div class="reu-entry-meta">
+          <span class="reu-entry-date">📅 ${fecha}</span>
+          <span class="reu-entry-proj">${esc(r.proyecto)}</span>
+        </div>
+        <div class="reu-entry-actions">
+          <button class="btn btn-sm" onclick="openEditReu('${r.id}')">✏️ Editar</button>
+        </div>
+      </div>
+      ${r.notas ? `<div class="reu-entry-body">${esc(r.notas)}</div>` : ''}
+      ${acuerdosHtml}
+    </div>`;
+  }).join('');
+}
+
+async function renderReuniones() {
+  await loadReuniones();
+  renderReuSidebar();
+  if (reuSelProj) renderReuEntries();
+}
+
+/* ── MODAL REUNION ── */
+function openNewReu() {
+  reuEditId = null;
+  el('reu-modal-title').textContent = 'Nueva entrada';
+  el('btn-del-reu').style.display = 'none';
+  // Fill project select
+  el('reu-proj-sel').innerHTML = S.projects.map(p=>`<option value="${esc(p.nombre)}"${p.nombre===reuSelProj?' selected':''}>${esc(p.nombre)}</option>`).join('');
+  // Default to now
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  el('reu-fecha').value = now.toISOString().slice(0,16);
+  el('reu-notas').value = '';
+  renderAcuerdoInputs([]);
+  openOv('ov-reu');
+}
+
+function openEditReu(id) {
+  const r = reuData.find(x=>x.id===id); if(!r) return;
+  reuEditId = id;
+  el('reu-modal-title').textContent = 'Editar entrada';
+  el('btn-del-reu').style.display = '';
+  el('reu-proj-sel').innerHTML = S.projects.map(p=>`<option value="${esc(p.nombre)}"${p.nombre===r.proyecto?' selected':''}>${esc(p.nombre)}</option>`).join('');
+  // Parse fecha for datetime-local
+  if (r.fecha) {
+    const d = new Date(r.fecha);
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    el('reu-fecha').value = d.toISOString().slice(0,16);
+  }
+  el('reu-notas').value = r.notas||'';
+  renderAcuerdoInputs(r.acuerdos||[]);
+  openOv('ov-reu');
+}
+
+function renderAcuerdoInputs(acuerdos) {
+  const list = el('acuerdos-list');
+  list.innerHTML = acuerdos.map((a,i) => `
+    <div class="acuerdo-row" id="acuerdo-${i}">
+      <input type="text" value="${esc(a.texto||'')}" placeholder="Describe el acuerdo…" data-idx="${i}">
+      <button class="acuerdo-del" onclick="removeAcuerdo(${i})">×</button>
+    </div>`).join('');
+}
+
+function addAcuerdo() {
+  const list = el('acuerdos-list');
+  const rows = list.querySelectorAll('.acuerdo-row');
+  const idx = rows.length;
+  const div = document.createElement('div');
+  div.className = 'acuerdo-row';
+  div.id = `acuerdo-${idx}`;
+  div.innerHTML = `<input type="text" placeholder="Describe el acuerdo…" data-idx="${idx}"><button class="acuerdo-del" onclick="removeAcuerdo(${idx})">×</button>`;
+  list.appendChild(div);
+  div.querySelector('input').focus();
+}
+
+function removeAcuerdo(idx) {
+  const row = document.getElementById('acuerdo-'+idx);
+  if (row) row.remove();
+}
+
+function getAcuerdosFromForm() {
+  const inputs = el('acuerdos-list').querySelectorAll('input[type="text"]');
+  // Preserve existing tarea_id links when editing
+  const oldAcuerdos = reuEditId ? (reuData.find(r=>r.id===reuEditId)?.acuerdos||[]) : [];
+  return Array.from(inputs).map((inp, i) => {
+    const texto = inp.value.trim();
+    if (!texto) return null;
+    const old = oldAcuerdos[i];
+    return { texto, tarea_id: old?.tarea_id||null };
+  }).filter(Boolean);
+}
+
+async function saveReu() {
+  const proyecto = el('reu-proj-sel').value;
+  const fecha    = el('reu-fecha').value;
+  const notas    = el('reu-notas').value.trim();
+  const acuerdos = getAcuerdosFromForm();
+  if (!proyecto || !fecha) { toast('Proyecto y fecha son obligatorios','err'); return; }
+  const entry = { proyecto, fecha: new Date(fecha).toISOString(), notas, acuerdos };
+  setSync('busy');
+  try {
+    const { error } = reuEditId
+      ? await db.from('reuniones').update(entry).eq('id', reuEditId)
+      : await db.from('reuniones').insert({ ...entry, id: newId() });
+    if (error) throw error;
+    toast(reuEditId ? 'Entrada actualizada' : 'Entrada guardada','ok');
+    closeOv('ov-reu');
+    await renderReuniones();
+  } catch(e) { setSync('err'); toast('Error: '+e.message,'err'); }
+}
+
+async function deleteReu() {
+  if (!reuEditId || !confirm('¿Eliminar esta entrada?')) return;
+  setSync('busy');
+  try {
+    const { error } = await db.from('reuniones').delete().eq('id', reuEditId);
+    if (error) throw error;
+    toast('Entrada eliminada','ok');
+    closeOv('ov-reu');
+    await renderReuniones();
+  } catch(e) { setSync('err'); toast('Error: '+e.message,'err'); }
+}
+
+/* ── VINCULAR TAREA ── */
+function openLinkTask(entryId, acuerdoIdx) {
+  reuLinkEntryId = entryId;
+  reuLinkIdx     = acuerdoIdx;
+  el('link-search').value = '';
+  // Pre-filter by entry's project
+  const entry = reuData.find(r=>r.id===entryId);
+  if (entry) el('link-search').value = entry.proyecto;
+  renderLinkList();
+  openOv('ov-link-task');
+}
+
+function renderLinkList() {
+  const search = (el('link-search')?.value||'').toLowerCase();
+  const entry  = reuData.find(r=>r.id===reuLinkEntryId);
+  let tasks = S.tasks.filter(t => t.estado !== 'Completada');
+  if (search) tasks = tasks.filter(t =>
+    (t.descripcion||'').toLowerCase().includes(search) ||
+    (t.proyecto||'').toLowerCase().includes(search)
+  );
+  const container = el('link-task-list');
+  if (!tasks.length) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Sin tareas que coincidan</div>';
+    return;
+  }
+  container.innerHTML = tasks.slice(0,20).map(t => {
+    const pc = (t.prioridad||'').toLowerCase();
+    return `<div style="padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background=''" onclick="linkTask('${t.id}')">
+      <div style="font-size:13px;font-weight:500">${esc(t.descripcion)}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:8px">
+        <span>${esc(t.proyecto)}</span>
+        <span class="badge ${pc}" style="font-size:10px">${t.prioridad}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function linkTask(taskId) {
+  const entry = reuData.find(r=>r.id===reuLinkEntryId);
+  if (!entry) return;
+  const acuerdos = [...(entry.acuerdos||[])];
+  if (reuLinkIdx < acuerdos.length) {
+    acuerdos[reuLinkIdx] = { ...acuerdos[reuLinkIdx], tarea_id: taskId };
+  }
+  setSync('busy');
+  try {
+    const { error } = await db.from('reuniones').update({ acuerdos }).eq('id', reuLinkEntryId);
+    if (error) throw error;
+    toast('Acuerdo vinculado a tarea ✓','ok');
+    closeOv('ov-link-task');
+    await renderReuniones();
+  } catch(e) { setSync('err'); toast('Error: '+e.message,'err'); }
 }
 
 /* ── INIT ───────────────────────────────────────────────────── */
