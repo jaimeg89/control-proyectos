@@ -348,6 +348,18 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
 .acuerdo-del:hover{color:var(--red)}
 .add-acuerdo-btn{font-size:12px;color:var(--accent);background:transparent;border:1px dashed var(--accent);border-radius:var(--r-sm);padding:6px 12px;cursor:pointer;width:100%;text-align:center;margin-top:4px;transition:background .15s}
 .add-acuerdo-btn:hover{background:var(--accent-bg)}
+.acuerdo-estado{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;border:none;transition:all .15s;flex-shrink:0;white-space:nowrap}
+.acuerdo-estado.pendiente{background:#e2eaf2;color:#2d5a7a}
+.acuerdo-estado.pendiente:hover{background:#dbeafe;color:#1e40af}
+.acuerdo-estado.completado{background:var(--green-bg);color:var(--green)}
+.acuerdo-estado.completado:hover{background:#bbf7d0;color:#14532d}
+.reu-entry-estado{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;border:none;transition:all .15s;white-space:nowrap}
+.reu-entry-estado.pendiente{background:#e2eaf2;color:#2d5a7a}
+.reu-entry-estado.pendiente:hover{background:#dbeafe;color:#1e40af}
+.reu-entry-estado.completado{background:var(--green-bg);color:var(--green)}
+.reu-entry-estado.completado:hover{background:#bbf7d0;color:#14532d}
+.reu-entry.completado-entry{opacity:.65}
+.reu-entry.completado-entry:hover{opacity:1}
 @media(max-width:768px){.reu-layout{grid-template-columns:1fr;height:auto}.reu-sidebar{max-height:200px}.reu-entries{max-height:400px}}
 
 </style>
@@ -1485,25 +1497,43 @@ function renderReuEntries() {
     const acuerdos = r.acuerdos||[];
     const acuerdosHtml = acuerdos.length ? `
       <div class="reu-acuerdos">
-        <div class="reu-acuerdos-title">📋 Acuerdos y compromisos (${acuerdos.length})</div>
+        <div class="reu-acuerdos-title">📋 Acuerdos y compromisos (${acuerdos.filter(a=>a.estado==='completado').length}/${acuerdos.length} completados)</div>
         ${acuerdos.map((a,i) => {
           const linkedTask = a.tarea_id ? S.tasks.find(t=>t.id===a.tarea_id) : null;
           const tagHtml = linkedTask
             ? `<span class="reu-acuerdo-tag linked" title="Tarea: ${esc(linkedTask.descripcion)}">✅ Vinculada</span>`
             : `<span class="reu-acuerdo-tag" onclick="openLinkTask('${r.id}',${i})" title="Vincular a tarea">🔗 Vincular</span>`;
-          return `<div class="reu-acuerdo-item">
-            <span class="reu-acuerdo-txt">${esc(a.texto)}</span>
-            ${tagHtml}
+          const estado = a.estado || 'pendiente';
+          const estadoLabel = estado === 'completado' ? '✓ Completado' : '○ Pendiente';
+          const estadoBtn = `<button class="acuerdo-estado ${estado}" onclick="toggleAcuerdo('${r.id}',${i})" title="Click para cambiar estado">${estadoLabel}</button>`;
+          return `<div class="reu-acuerdo-item" style="opacity:${estado==='completado'?'.6':'1'}">
+            <span class="reu-acuerdo-txt" style="${estado==='completado'?'text-decoration:line-through;color:var(--muted)':''}">${esc(a.texto)}</span>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+              ${estadoBtn}
+              ${tagHtml}
+            </div>
           </div>`;
         }).join('')}
       </div>` : '';
-    return `<div class="reu-entry">
+    // Determine entry estado
+    const entryAcuerdos = r.acuerdos||[];
+    const hasAcuerdos = entryAcuerdos.length > 0;
+    const allDone = hasAcuerdos && entryAcuerdos.every(a => a.estado === 'completado');
+    // Auto-complete if all acuerdos done; otherwise use stored estado
+    const entryEstado = allDone ? 'completado' : (r.estado || 'pendiente');
+    const entryEstadoLabel = entryEstado === 'completado' ? '✓ Completado' : '○ Pendiente';
+    // Only show manual toggle if entry has NO acuerdos
+    const estadoEntryHtml = hasAcuerdos
+      ? `<span class="reu-entry-estado ${entryEstado}" title="${allDone?'Completado automáticamente':'Pendiente — completa todos los acuerdos'}" style="cursor:default">${entryEstadoLabel}</span>`
+      : `<button class="reu-entry-estado ${entryEstado}" onclick="toggleEntryEstado('${r.id}')" title="Click para cambiar estado">${entryEstadoLabel}</button>`;
+    return `<div class="reu-entry${entryEstado==='completado'?' completado-entry':''}">
       <div class="reu-entry-hdr">
         <div class="reu-entry-meta">
           <span class="reu-entry-date">📅 ${fecha}</span>
           <span class="reu-entry-proj">${esc(r.proyecto)}</span>
         </div>
         <div class="reu-entry-actions">
+          ${estadoEntryHtml}
           <button class="btn btn-sm" onclick="openEditReu('${r.id}')">✏️ Editar</button>
         </div>
       </div>
@@ -1580,13 +1610,13 @@ function removeAcuerdo(idx) {
 
 function getAcuerdosFromForm() {
   const inputs = el('acuerdos-list').querySelectorAll('input[type="text"]');
-  // Preserve existing tarea_id links when editing
+  // Preserve existing tarea_id and estado when editing
   const oldAcuerdos = reuEditId ? (reuData.find(r=>r.id===reuEditId)?.acuerdos||[]) : [];
   return Array.from(inputs).map((inp, i) => {
     const texto = inp.value.trim();
     if (!texto) return null;
     const old = oldAcuerdos[i];
-    return { texto, tarea_id: old?.tarea_id||null };
+    return { texto, tarea_id: old?.tarea_id||null, estado: old?.estado||'pendiente' };
   }).filter(Boolean);
 }
 
@@ -1596,7 +1626,9 @@ async function saveReu() {
   const notas    = el('reu-notas').value.trim();
   const acuerdos = getAcuerdosFromForm();
   if (!proyecto || !fecha) { toast('Proyecto y fecha son obligatorios','err'); return; }
-  const entry = { proyecto, fecha: new Date(fecha).toISOString(), notas, acuerdos };
+  // Preserve existing estado when editing (auto-logic handles it at render time)
+    const existingEstado = reuEditId ? (reuData.find(r=>r.id===reuEditId)?.estado||'pendiente') : 'pendiente';
+    const entry = { proyecto, fecha: new Date(fecha).toISOString(), notas, acuerdos, estado: existingEstado };
   setSync('busy');
   try {
     const { error } = reuEditId
@@ -1656,6 +1688,44 @@ function renderLinkList() {
       </div>
     </div>`;
   }).join('');
+}
+
+async function toggleAcuerdo(entryId, acuerdoIdx) {
+  const entry = reuData.find(r=>r.id===entryId); if(!entry) return;
+  const acuerdos = JSON.parse(JSON.stringify(entry.acuerdos||[]));
+  if (acuerdoIdx >= acuerdos.length) return;
+  const current = acuerdos[acuerdoIdx].estado || 'pendiente';
+  acuerdos[acuerdoIdx].estado = current === 'completado' ? 'pendiente' : 'completado';
+  setSync('busy');
+  try {
+    // Auto-complete entry if all acuerdos are done
+    const allDone = acuerdos.length > 0 && acuerdos.every(a => a.estado === 'completado');
+    const updateData = { acuerdos, updated_at: new Date().toISOString() };
+    if (allDone) updateData.estado = 'completado';
+    else if (entry.estado === 'completado') updateData.estado = 'pendiente';
+    const { error } = await db.from('reuniones').update(updateData).eq('id', entryId);
+    if (error) throw error;
+    setSync('ok');
+    entry.acuerdos = acuerdos;
+    if ('estado' in updateData) entry.estado = updateData.estado;
+    if (allDone) toast('¡Todos los acuerdos completados! ✓','ok');
+    renderReuEntries();
+  } catch(e) { setSync('err'); toast('Error: '+e.message,'err'); }
+}
+
+async function toggleEntryEstado(entryId) {
+  const entry = reuData.find(r=>r.id===entryId); if(!entry) return;
+  // Only allow manual toggle if no acuerdos
+  if ((entry.acuerdos||[]).length > 0) return;
+  const newEstado = (entry.estado||'pendiente') === 'completado' ? 'pendiente' : 'completado';
+  setSync('busy');
+  try {
+    const { error } = await db.from('reuniones').update({ estado: newEstado, updated_at: new Date().toISOString() }).eq('id', entryId);
+    if (error) throw error;
+    setSync('ok');
+    entry.estado = newEstado;
+    renderReuEntries();
+  } catch(e) { setSync('err'); toast('Error: '+e.message,'err'); }
 }
 
 async function linkTask(taskId) {
