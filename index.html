@@ -362,6 +362,53 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
 .reu-entry.completado-entry:hover{opacity:1}
 @media(max-width:768px){.reu-layout{grid-template-columns:1fr;height:auto}.reu-sidebar{max-height:200px}.reu-entries{max-height:400px}}
 
+
+/* ── REPORTES ── */
+.rep-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;box-shadow:var(--shadow)}
+.rep-toolbar label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-right:4px}
+.rep-toolbar select,.rep-toolbar input[type="month"]{padding:7px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-size:13px;outline:none}
+.rep-toolbar select:focus,.rep-toolbar input[type="month"]:focus{border-color:var(--accent)}
+.rep-toolbar-group{display:flex;align-items:center;gap:6px}
+.rep-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.rep-kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow)}
+.rep-kpi-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
+.rep-kpi-val{font-size:28px;font-weight:700;font-family:'JetBrains Mono',monospace;line-height:1}
+.rep-kpi-val.green{color:var(--green)} .rep-kpi-val.amber{color:var(--amber)} .rep-kpi-val.blue{color:var(--accent)}
+.rep-kpi-pct{font-size:11px;color:var(--muted);margin-top:4px}
+.rep-section{margin-bottom:28px}
+.rep-section-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:8px}
+.rep-section-title em{font-style:normal;font-size:12px;color:var(--muted);font-weight:400}
+.rep-month-block{background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow)}
+.rep-month-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
+.rep-month-hdr:hover{background:var(--accent-bg)}
+.rep-month-name{font-size:13px;font-weight:700;color:var(--text)}
+.rep-month-stats{display:flex;align-items:center;gap:12px;font-size:12px}
+.rep-stat-chip{padding:2px 8px;border-radius:10px;font-weight:600}
+.rep-stat-chip.done{background:var(--green-bg);color:var(--green)}
+.rep-stat-chip.pend{background:#e2eaf2;color:#2d5a7a}
+.rep-month-pct{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)}
+.rep-month-body{padding:12px 16px}
+.rep-task-row{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
+.rep-task-row:last-child{border-bottom:none}
+.rep-task-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.rep-task-dot.done{background:var(--green)}
+.rep-task-dot.pend{background:var(--amber)}
+.rep-task-info{flex:1;min-width:0}
+.rep-task-desc{font-size:13px;font-weight:500}
+.rep-task-desc.done-txt{text-decoration:line-through;color:var(--muted)}
+.rep-task-meta{font-size:11px;color:var(--dim);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap}
+.rep-proj-block{background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow)}
+.rep-proj-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border)}
+.rep-proj-name{font-size:13px;font-weight:700}
+.rep-progress-wrap{margin:10px 0 4px}
+.rep-progress-bar{height:6px;background:var(--surface);border-radius:3px;overflow:hidden}
+.rep-progress-fill{height:100%;border-radius:3px;background:var(--green);transition:width .4s}
+.rep-progress-lbl{font-size:11px;color:var(--muted);margin-top:4px}
+.rep-empty{text-align:center;padding:48px;color:var(--muted)}
+.rep-toggle-ic{font-size:12px;color:var(--dim);transition:transform .2s}
+.rep-toggle-ic.open{transform:rotate(180deg)}
+@media(max-width:768px){.rep-summary{grid-template-columns:1fr 1fr}.rep-toolbar{gap:8px}}
+
 </style>
 </head>
 <body>
@@ -405,6 +452,7 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
     <button class="nav-btn"     data-tab="personas"   onclick="showTab('personas')"   id="tab-personas">Personas</button>
     <button class="nav-btn"     data-tab="eliminadas" onclick="showTab('eliminadas')" id="tab-elim" style="display:none">🗑 Eliminadas</button>
     <button class="nav-btn" data-tab="reuniones" onclick="showTab('reuniones')" id="tab-reuniones" style="display:none">📓 Reuniones</button>
+    <button class="nav-btn" data-tab="reportes" onclick="showTab('reportes')" id="tab-reportes" style="display:none">📊 Reportes</button>
   </nav>
 
   <div class="main">
@@ -505,6 +553,37 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
             <div class="reu-empty"><div class="reu-empty-ic">📓</div><span>Selecciona un proyecto para ver sus apuntes</span></div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- REPORTES -->
+    <div class="sec" id="sec-reportes">
+      <div class="rep-toolbar">
+        <div class="rep-toolbar-group">
+          <label>Persona</label>
+          <select id="rep-persona" onchange="renderReporte()">
+            <option value="">Selecciona…</option>
+          </select>
+        </div>
+        <div class="rep-toolbar-group">
+          <label>Desde</label>
+          <input id="rep-desde" type="month" onchange="renderReporte()">
+        </div>
+        <div class="rep-toolbar-group">
+          <label>Hasta</label>
+          <input id="rep-hasta" type="month" onchange="renderReporte()">
+        </div>
+        <div class="rep-toolbar-group">
+          <label>Ver por</label>
+          <select id="rep-vista" onchange="renderReporte()">
+            <option value="mes">Mes</option>
+            <option value="proyecto">Proyecto</option>
+          </select>
+        </div>
+        <button class="btn btn-sm" onclick="resetRepFiltros()" style="margin-left:auto">↺ Limpiar</button>
+      </div>
+      <div id="rep-content">
+        <div class="rep-empty">Selecciona una persona para generar el reporte</div>
       </div>
     </div>
 
@@ -817,6 +896,7 @@ function applyPermissions() {
   // Eliminadas tab: admin only
   el('tab-elim').style.display = admin ? '' : 'none';
   el('tab-reuniones').style.display = admin ? '' : 'none';
+  el('tab-reportes').style.display = admin ? '' : 'none';
 
   // Personas tab: only for admin and only in "todos" view
   el('tab-personas').style.display = (admin && S.activeUser === 'todos') ? '' : 'none';
@@ -1426,6 +1506,7 @@ function renderAll(){
   if(S.activeTab==='personas')   renderPersonas();
   if(S.activeTab==='eliminadas') renderEliminadas();
   if(S.activeTab==='reuniones')   renderReuniones();
+  if(S.activeTab==='reportes')    { initRepFiltros(); renderReporte(); }
   applyPermissions();
 }
 
@@ -1743,6 +1824,206 @@ async function linkTask(taskId) {
     closeOv('ov-link-task');
     await renderReuniones();
   } catch(e) { setSync('err'); toast('Error: '+e.message,'err'); }
+}
+
+
+/* ── REPORTES ─────────────────────────────────────────────── */
+function initRepFiltros() {
+  // Fill persona selector with all personas
+  const sel = el('rep-persona');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Selecciona…</option>' +
+    S.personas.map(p => `<option value="${esc(p.nombre)}"${p.nombre===current?' selected':''}>${esc(p.nombre)}</option>`).join('');
+  // Default date range: current year
+  if (!el('rep-desde').value) {
+    const now = new Date();
+    el('rep-desde').value = `${now.getFullYear()}-01`;
+    el('rep-hasta').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  }
+}
+
+function resetRepFiltros() {
+  el('rep-persona').value = '';
+  const now = new Date();
+  el('rep-desde').value = `${now.getFullYear()}-01`;
+  el('rep-hasta').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  el('rep-vista').value = 'mes';
+  el('rep-content').innerHTML = '<div class="rep-empty">Selecciona una persona para generar el reporte</div>';
+}
+
+function getRepTasks() {
+  const persona = el('rep-persona').value;
+  const desde   = el('rep-desde').value;  // YYYY-MM
+  const hasta   = el('rep-hasta').value;
+  if (!persona) return null;
+  let tasks = S.tasks.filter(t => t.persona === persona && t.fecha);
+  // Filter by date range using fecha (due date)
+  if (desde) tasks = tasks.filter(t => t.fecha >= desde + '-01');
+  if (hasta) {
+    // Get last day of hasta month
+    const [y,m] = hasta.split('-').map(Number);
+    const lastDay = new Date(y, m, 0).getDate();
+    tasks = tasks.filter(t => t.fecha <= `${hasta}-${lastDay}`);
+  }
+  return { persona, tasks, desde, hasta };
+}
+
+function renderReporte() {
+  const data = getRepTasks();
+  if (!data) {
+    el('rep-content').innerHTML = '<div class="rep-empty">Selecciona una persona para generar el reporte</div>';
+    return;
+  }
+  const { persona, tasks } = data;
+  const vista = el('rep-vista').value;
+  const done  = tasks.filter(t => t.estado === 'Completada');
+  const pend  = tasks.filter(t => t.estado !== 'Completada');
+  const pct   = tasks.length ? Math.round(done.length/tasks.length*100) : 0;
+  const col   = personaColor(persona);
+
+  // Summary KPIs
+  const summary = `<div class="rep-summary">
+    <div class="rep-kpi"><div class="rep-kpi-lbl">Total tareas</div><div class="rep-kpi-val" style="color:${col}">${tasks.length}</div><div class="rep-kpi-pct">en el período</div></div>
+    <div class="rep-kpi"><div class="rep-kpi-lbl">Completadas</div><div class="rep-kpi-val green">${done.length}</div><div class="rep-kpi-pct">${pct}% del total</div></div>
+    <div class="rep-kpi"><div class="rep-kpi-lbl">Pendientes / En curso</div><div class="rep-kpi-val amber">${pend.length}</div><div class="rep-kpi-pct">${100-pct}% del total</div></div>
+    <div class="rep-kpi"><div class="rep-kpi-lbl">Proyectos</div><div class="rep-kpi-val blue">${[...new Set(tasks.map(t=>t.proyecto))].length}</div><div class="rep-kpi-pct">con tareas</div></div>
+  </div>`;
+
+  let body = '';
+  if (vista === 'mes') {
+    body = renderReportePorMes(tasks);
+  } else {
+    body = renderReportePorProyecto(tasks);
+  }
+
+  el('rep-content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div style="width:36px;height:36px;border-radius:50%;background:${col}22;color:${col};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">${initials(persona)}</div>
+      <div>
+        <div style="font-size:16px;font-weight:700">${esc(persona)}</div>
+        <div style="font-size:12px;color:var(--muted)">Reporte de tareas · ${el('rep-desde').value||'inicio'} → ${el('rep-hasta').value||'hoy'}</div>
+      </div>
+    </div>
+    ${summary}
+    ${body}`;
+}
+
+function repTaskRow(t) {
+  const isDone = t.estado === 'Completada';
+  const dot    = isDone ? 'done' : 'pend';
+  const txtCls = isDone ? 'done-txt' : '';
+  const ec     = t.estado.toLowerCase().replace(/ /g,'-').replace('ó','o');
+  const pc     = (t.prioridad||'').toLowerCase();
+  return `<div class="rep-task-row">
+    <div class="rep-task-dot ${dot}" style="margin-top:5px"></div>
+    <div class="rep-task-info">
+      <div class="rep-task-desc ${txtCls}">${esc(t.descripcion)}</div>
+      <div class="rep-task-meta">
+        <span>${esc(t.proyecto)}</span>
+        <span class="badge ${pc}" style="font-size:10px;padding:1px 6px">${t.prioridad}</span>
+        <span class="badge ${ec}" style="font-size:10px;padding:1px 6px">${t.estado}</span>
+        <span>📅 ${fmtDate(t.fecha)}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderReportePorMes(tasks) {
+  // Group by YYYY-MM of fecha
+  const groups = {};
+  tasks.forEach(t => {
+    const key = t.fecha.slice(0,7); // YYYY-MM
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(t);
+  });
+  const keys = Object.keys(groups).sort().reverse();
+  if (!keys.length) return '<div class="rep-empty">Sin tareas en el período seleccionado</div>';
+
+  return `<div class="rep-section">
+    <div class="rep-section-title">📅 Por mes <em>(agrupado por fecha límite)</em></div>
+    ${keys.map(k => {
+      const list = groups[k];
+      const done = list.filter(t=>t.estado==='Completada').length;
+      const pend = list.length - done;
+      const pct  = Math.round(done/list.length*100);
+      const [y,m] = k.split('-');
+      const mesNombre = new Date(+y, +m-1, 1).toLocaleDateString('es-EC', {month:'long',year:'numeric'});
+      const id = 'rm-'+k;
+      return `<div class="rep-month-block">
+        <div class="rep-month-hdr" onclick="toggleRepBlock('${id}')">
+          <span class="rep-month-name">${mesNombre.charAt(0).toUpperCase()+mesNombre.slice(1)}</span>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="rep-month-stats">
+              <span class="rep-stat-chip done">✓ ${done}</span>
+              <span class="rep-stat-chip pend">○ ${pend}</span>
+            </div>
+            <span class="rep-month-pct">${pct}%</span>
+            <span class="rep-toggle-ic open" id="ic-${id}">▾</span>
+          </div>
+        </div>
+        <div class="rep-month-body" id="${id}">
+          <div class="rep-progress-wrap">
+            <div class="rep-progress-bar"><div class="rep-progress-fill" style="width:${pct}%"></div></div>
+            <div class="rep-progress-lbl">${done} de ${list.length} completadas</div>
+          </div>
+          ${list.sort((a,b)=>a.fecha.localeCompare(b.fecha)).map(t=>repTaskRow(t)).join('')}
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function renderReportePorProyecto(tasks) {
+  const groups = {};
+  tasks.forEach(t => {
+    if (!groups[t.proyecto]) groups[t.proyecto] = [];
+    groups[t.proyecto].push(t);
+  });
+  const keys = Object.keys(groups).sort();
+  if (!keys.length) return '<div class="rep-empty">Sin tareas en el período seleccionado</div>';
+
+  return `<div class="rep-section">
+    <div class="rep-section-title">📁 Por proyecto</div>
+    ${keys.map(proj => {
+      const list = groups[proj];
+      const done = list.filter(t=>t.estado==='Completada').length;
+      const pend = list.length - done;
+      const pct  = Math.round(done/list.length*100);
+      const pinfo = S.projects.find(p=>p.nombre===proj);
+      const id = 'rp-'+proj.replace(/[^a-z0-9]/gi,'_');
+      return `<div class="rep-proj-block">
+        <div class="rep-proj-hdr" onclick="toggleRepBlock('${id}')">
+          <div>
+            <div class="rep-proj-name">${esc(proj)}</div>
+            ${pinfo?`<div style="font-size:11px;color:var(--muted);margin-top:2px">${pinfo.etapa||''} · ${pinfo.cliente||''}</div>`:''}
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="rep-month-stats">
+              <span class="rep-stat-chip done">✓ ${done}</span>
+              <span class="rep-stat-chip pend">○ ${pend}</span>
+            </div>
+            <span class="rep-month-pct">${pct}%</span>
+            <span class="rep-toggle-ic open" id="ic-${id}">▾</span>
+          </div>
+        </div>
+        <div class="rep-month-body" id="${id}">
+          <div class="rep-progress-wrap">
+            <div class="rep-progress-bar"><div class="rep-progress-fill" style="width:${pct}%"></div></div>
+            <div class="rep-progress-lbl">${done} de ${list.length} completadas</div>
+          </div>
+          ${list.sort((a,b)=>a.fecha.localeCompare(b.fecha)).map(t=>repTaskRow(t)).join('')}
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function toggleRepBlock(id) {
+  const body = el(id), ic = el('ic-'+id);
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : '';
+  if (ic) ic.classList.toggle('open', !open);
 }
 
 /* ── INIT ───────────────────────────────────────────────────── */
