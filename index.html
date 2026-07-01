@@ -1506,7 +1506,7 @@ function renderAll(){
   if(S.activeTab==='personas')   renderPersonas();
   if(S.activeTab==='eliminadas') renderEliminadas();
   if(S.activeTab==='reuniones')   renderReuniones();
-  if(S.activeTab==='reportes')    { initRepFiltros(); renderReporte(); }
+  if(S.activeTab==='reportes')    { initRepFiltros(); setTimeout(renderReporte, 0); }
   applyPermissions();
 }
 
@@ -1829,12 +1829,13 @@ async function linkTask(taskId) {
 
 /* ── REPORTES ─────────────────────────────────────────────── */
 function initRepFiltros() {
-  // Fill persona selector with all personas
   const sel = el('rep-persona');
-  const current = sel.value;
+  const current = sel.value; // save before rebuild
   sel.innerHTML = '<option value="">Selecciona…</option>' +
-    S.personas.map(p => `<option value="${esc(p.nombre)}"${p.nombre===current?' selected':''}>${esc(p.nombre)}</option>`).join('');
-  // Default date range: current year
+    S.personas.map(p => `<option value="${esc(p.nombre)}">${esc(p.nombre)}</option>`).join('');
+  // Restore previous selection
+  if (current) sel.value = current;
+  // Default date range: current year (only set if empty)
   if (!el('rep-desde').value) {
     const now = new Date();
     el('rep-desde').value = `${now.getFullYear()}-01`;
